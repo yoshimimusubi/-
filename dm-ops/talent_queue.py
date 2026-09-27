@@ -8,6 +8,7 @@
   python3 talent_queue.py inspect  [--master DIR]
   python3 talent_queue.py queue    --campaign IGG [--master DIR] [--cap N] [--dry-run]
   python3 talent_queue.py record   --campaign IGG --key @handle --result sent|failed|unknown [--note ...]
+  python3 talent_queue.py research-list --campaign IGG [--limit N] [--include-sendable]
   python3 talent_queue.py gap-ok   --checked-by 名前 --note "7/11以降の送付をX送信済みBOXで確認"
 
 安全装置（どれか1つでも該当すれば送付キューに入れない＝保留リストへ）:
@@ -43,6 +44,16 @@ from collections import defaultdict
 
 DEFAULT_MASTER = os.path.expanduser("~/dm-ops/talent-master")
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# リサーチ結果（research_results.csv）の列。talent-contact-research スキルがこの形で追記する。
+RESEARCH_FIELDS = ["talent_id", "x_handle", "display_name", "researched_at_jst", "researcher", "account_status",
+                   "last_post_date", "activity_status", "is_individual", "is_japanese_activity", "dm_open", "dm_checked_as",
+                   "x_followers", "youtube_subscribers", "inquiry_policy", "inquiry_evidence", "contact_email",
+                   "email_source_url", "contact_form_url", "agency", "notes"]
+# 台帳の値を上書きしてよい列（空欄・unknown・不明 のときは上書きしない）
+RESEARCH_OVERRIDES = ["activity_status", "is_individual", "is_japanese_activity", "dm_open",
+                      "x_followers", "youtube_subscribers"]
+UNKNOWN_VALUES = {"", "unknown", "不明", "未確認"}
 
 LOG_FIELDS = ["logged_at", "campaign", "key", "name", "x_handle", "youtube", "talent_id", "result", "note"]
 
@@ -214,7 +225,8 @@ class Ident:
         self.talent_id = pick(row, cols["id"])
         self.name = pick(row, cols["name"])
         self.x = norm_x(pick(row, cols["x_handle"]))
-        self.yt = norm_yt(pick(row, cols["youtube"]))
+        self.yt_raw = pick(row, cols["youtube"])
+        self.yt = norm_yt(self.yt_raw)
         self.extra = set()
 
     def add_aliases(self, aliases):
@@ -304,6 +316,96 @@ def load_aliases(master, cfg):
         elif typ.startswith("youtube") and norm_yt(val):
             out[tid].add(("yt", norm_yt(val)))
     return out
+
+
+def research_path(master):
+    return os.path.join(master, "research_results.csv")
+
+
+def parse_num(v):
+    v = unicodedata.normalize("NFKC", str(v or "")).replace(",", "").strip()
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*([万千kKmM]?)", v)
+    if not m:
+        return None
+    n = float(m.group(1)) * {"万": 10000, "千": 1000, "k": 1000, "K": 1000, "m": 1e6, "M": 1e6}.get(m.group(2), 1)
+    return int(n)
+
+
+def load_research(master, cfg, today):
+    """talent_id / 正規化Xハンドル → 最新のリサーチ行。valid_days より古いものは使わない。"""
+    path = research_path(master)
+    by_id, by_x = {}, {}
+    if not os.path.exists(path):
+        return by_id, by_x
+    valid = int(cfg.get("research", {}).get("valid_days", 30))
+    for r in read_table(path)[1]:
+        d = parse_date(r.get("researched_at_jst", ""))
+        if not d or (today - d).days > valid:
+            continue
+        r["_date"] = d
+        for key, table in ((r.get("talent_id", "").strip(), by_id), (norm_x(r.get("x_handle", "")), by_x)):
+            if key and (key not in table or table[key]["_date"] <= d):
+                table[key] = r
+    return by_id, by_x
+
+
+def find_research(ident, research):
+    by_id, by_x = research
+    if ident.talent_id in by_id:
+        return by_id[ident.talent_id]
+    for kind, val in [("x", ident.x)] + sorted(ident.extra):
+        if kind == "x" and val in by_x:
+            return by_x[val]
+    return None
+
+
+def apply_research(row, res, cfg, campaign):
+    """台帳の行にリサーチ結果を重ねた「実効値」と、リサーチで解消された notes の文言を返す。"""
+    if not res:
+        return row, []
+    eff = dict(row)
+    for c in RESEARCH_OVERRIDES:
+        v = (res.get(c) or "").strip()
+        if v.lower() not in UNKNOWN_VALUES:
+            eff[c] = v
+    rcfg = cfg.get("research", {})
+    # 数値条件のある案件（コンテンツプリント）は、リサーチで数値が取れたら適合を再判定
+    fit = rcfg.get("audience_fit", {}).get(campaign)
+    if fit:
+        nums = [parse_num(res.get(f)) for f in fit["fields"]]
+        nums = [n for n in nums if n is not None]
+        if nums:
+            ok = any(fit["min"] <= n < fit["max_exclusive"] for n in nums) and all(n < fit["max_exclusive"] for n in nums)
+            eff[fit["column"]] = "yes" if ok else "no"
+    cleared = []
+    for phrase, cond in rcfg.get("clears_notes", {}).items():
+        v = (res.get(cond["field"]) or "").strip()
+        if (cond["values"] == "any" and v.lower() not in UNKNOWN_VALUES) or v in cond["values"]:
+            cleared.append(phrase)
+    return eff, cleared
+
+
+def decide_channel(eff, res):
+    """送付手段（DM / メール / フォーム）と、送れない場合の保留理由を返す。"""
+    policy = (res or {}).get("inquiry_policy", "").strip()
+    email = (res or {}).get("contact_email", "").strip()
+    form = (res or {}).get("contact_form_url", "").strip()
+    status = (res or {}).get("account_status", "").strip()
+    if status and status != "存在":
+        return "", f"アカウント状態（{status}）"
+    if policy == "依頼お断り":
+        return "", "依頼お断りの明記"
+    if policy == "メール可":
+        return ("メール", "") if email else ("", "メール指定だがアドレス未取得")
+    if policy == "フォーム可":
+        return ("フォーム", "") if form else ("", "フォーム指定だがURL未取得")
+    if (eff.get("dm_open") or "").strip() != "no":
+        return "DM", ""
+    if email:
+        return "メール", ""
+    if form:
+        return "フォーム", ""
+    return "", "DM閉鎖・メール/フォームなし"
 
 
 def build_state(master, cfg):
@@ -415,7 +517,7 @@ def classify(master, cfg, campaign, today):
     state["rule_missing_cols"] = sorted({c for c in list(require) + list(exclude) if c not in header}
                                         | ({notes_col} if notes_hold and notes_col not in header else set()))
 
-    def rule_reasons(row):
+    def rule_reasons(row, cleared=()):
         out = []
         for col, allowed in require.items():
             v = (row.get(col) or "").strip()
@@ -428,6 +530,8 @@ def classify(master, cfg, campaign, today):
             if v in banned:
                 out.append(f"除外 {col}（{v}）")
         notes = row.get(notes_col) or ""
+        for phrase in cleared:  # リサーチで根拠が取れた文言は保留の対象から外す
+            notes = notes.replace(phrase, "")
         for pat in notes_hold:
             if pat in notes:
                 out.append(f"notes「{pat}」")
@@ -435,6 +539,8 @@ def classify(master, cfg, campaign, today):
 
     idents = [Ident(r, lc).add_aliases(state["aliases"]) for r in ledger]
     prio = cfg.get("priority_notes", [])
+    research = load_research(master, cfg, today)
+    state["research_count"] = len(research[0]) + len(research[1])
 
     # 同名チェック: 同じ正規化名の行があり、どれかに送付先（X/YouTube）が無い → どれが本人か決められない
     by_name = defaultdict(list)
@@ -450,7 +556,12 @@ def classify(master, cfg, campaign, today):
 
     ok, held, seen = [], [], set()
     for i in idents:
-        reasons = rule_reasons(i.row)
+        res = find_research(i, research)
+        eff, cleared = apply_research(i.row, res, cfg, campaign)
+        reasons = rule_reasons(eff, cleared)
+        channel, why = decide_channel(eff, res)
+        if why:
+            reasons.append(why)
         if not i.strong_keys():
             reasons.append("識別子不足（X/YouTube/IDなし）")
         elif not i.reachable():
@@ -475,11 +586,16 @@ def classify(master, cfg, campaign, today):
             reasons.append("台帳内の重複行")
         seen.add(pk)
         rec = {"key": pk, "name": i.name, "x_handle": i.x and "@" + i.x,
-               "x_url": i.x and f"https://x.com/{i.x}", "youtube": i.yt, "talent_id": i.talent_id,
-               "sender": cfg.get("senders", {}).get(campaign, "")}
+               "x_url": i.x and f"https://x.com/{i.x}", "youtube": i.yt_raw, "talent_id": i.talent_id,
+               "sender": cfg.get("senders", {}).get(campaign, ""), "channel": channel,
+               "contact_email": (res or {}).get("contact_email", ""),
+               "contact_form_url": (res or {}).get("contact_form_url", ""),
+               "inquiry_policy": (res or {}).get("inquiry_policy", ""),
+               "researched_at_jst": (res or {}).get("researched_at_jst", "")}
         for c in cfg.get("queue_extra_columns", []):
-            rec[c] = i.row.get(c, "")
-        rec["reasons"] = " / ".join(dict.fromkeys(reasons))
+            rec[c] = eff.get(c, "")
+        rec["_reasons"] = list(dict.fromkeys(reasons))
+        rec["reasons"] = " / ".join(rec["_reasons"])
         # 優先度: notes に priority_notes の文言があるものを先に（同順位は台帳の並び）
         notes = i.row.get(notes_col) or ""
         rec["_rank"] = next((n for n, p in enumerate(prio) if p in notes), len(prio))
@@ -583,7 +699,8 @@ def cmd_queue(args, cfg):
     stamp = today.isoformat()
     tag = "DRYRUN_" if args.dry_run or not gap_ok else ""
     out = os.path.join(master, "out")
-    fields = (["key", "name", "x_handle", "x_url", "youtube", "talent_id", "sender"]
+    fields = (["key", "name", "channel", "sender", "x_handle", "x_url", "contact_email", "contact_form_url",
+               "inquiry_policy", "researched_at_jst", "youtube", "talent_id"]
               + cfg.get("queue_extra_columns", []) + ["reasons"])
     qpath = os.path.join(out, f"{tag}queue_{campaign}_{stamp}.csv")
     hpath = os.path.join(out, f"{tag}held_{campaign}_{stamp}.csv")
@@ -602,6 +719,66 @@ def cmd_queue(args, cfg):
     print(f"  送付キュー: {qpath}\n  保留リスト: {hpath}")
     if rest:
         print(f"  （残り {len(rest)}名は翌日以降）")
+
+
+def cmd_research_list(args, cfg):
+    """リサーチすれば送れる可能性がある人（保留理由がすべてリサーチで解消しうるもの）を書き出す。"""
+    master = args.master
+    today = dt.date.today()
+    campaigns = list(cfg["campaigns"]) if args.campaign.lower() in ("all", "全部") else [resolve_campaign(cfg, args.campaign)]
+    campaign = "全案件" if len(campaigns) > 1 else campaigns[0]
+    rcfg = cfg.get("research", {})
+    merged = {}
+    for camp in campaigns:
+        ok, held, _ = classify(master, cfg, camp, today)
+        pats = rcfg.get("researchable_reasons", {}).get("common", []) + \
+            rcfg.get("researchable_reasons", {}).get(camp, [])
+
+        def researchable(reason):
+            return any(reason.startswith(p) for p in pats)
+
+        # 有効期間内のリサーチが済んでいる人は、残った理由がリサーチでは解消できないので対象外
+        fit = rcfg.get("audience_fit", {}).get(camp)
+
+        def hopeless(r):
+            """既知の数値が条件から大きく外れている（調べ直しても適合しそうにない）"""
+            if not fit:
+                return False
+            nums = [n for n in (parse_num(r.get(f)) for f in fit["fields"]) if n is not None]
+            return bool(nums) and (max(nums) < fit.get("research_skip_below", 0)
+                                   or any(n >= fit["max_exclusive"] for n in nums))
+
+        found = [dict(r, check=f"{camp} 保留: " + r["reasons"]) for r in held
+                 if r["_reasons"] and not r["researched_at_jst"] and not hopeless(r)
+                 and all(researchable(x) for x in r["_reasons"])]
+        if args.include_sendable:
+            found += [dict(r, check=f"{camp} 送付可（メール・受付方針の確認のみ）", _reasons=[])
+                      for r in ok if not r["researched_at_jst"]]
+        for r in found:  # 同じ人は1回調べれば両案件に効くので1行にまとめる
+            if r["key"] in merged:
+                merged[r["key"]]["check"] += " ｜ " + r["check"]
+                merged[r["key"]]["_reasons"] = merged[r["key"]]["_reasons"] + r["_reasons"]
+                merged[r["key"]]["_rank"] = min(merged[r["key"]]["_rank"], r["_rank"])
+            else:
+                merged[r["key"]] = r
+    targets = sorted(merged.values(), key=lambda r: r["_rank"])
+    if args.limit:
+        targets = targets[:args.limit]
+    stamp = today.isoformat()
+    path = os.path.join(master, "out", f"research_targets_{campaign}_{stamp}.csv")
+    write_csv(path, targets, ["key", "name", "x_url", "youtube", "talent_id", "check"]
+              + cfg.get("queue_extra_columns", []))
+    rp = research_path(master)
+    if not os.path.exists(rp):
+        write_csv(rp, [], RESEARCH_FIELDS)
+    counts = defaultdict(int)
+    for r in targets:
+        for x in r["_reasons"]:
+            counts[re.sub(r"（.*$", "", x)] += 1
+    print(f"案件 {campaign} / {stamp}: リサーチ対象 {len(targets)}名")
+    for r, n in sorted(counts.items(), key=lambda x: -x[1]):
+        print(f"    {r}: {n}")
+    print(f"  対象リスト: {path}\n  結果の追記先: {rp}")
 
 
 def cmd_record(args, cfg):
@@ -649,17 +826,22 @@ def main(argv=None):
     r.add_argument("--result", required=True, choices=["sent", "failed", "unknown"])
     r.add_argument("--name")
     r.add_argument("--note")
+    rl = sub.add_parser("research-list")
+    rl.add_argument("--campaign", required=True, help="案件名、または all（両案件をまとめて1人1行）")
+    rl.add_argument("--limit", type=int)
+    rl.add_argument("--include-sendable", action="store_true", help="送付可の人もメール・受付方針の確認対象に含める")
     g = sub.add_parser("gap-ok")
     g.add_argument("--checked-by", required=True)
     g.add_argument("--note", required=True)
-    for sp in (q, r, g, sub.choices["inspect"]):
+    for sp in (q, r, g, rl, sub.choices["inspect"]):
         sp.add_argument("--master", default=argparse.SUPPRESS)
     args = p.parse_args(argv)
     args.master = os.path.expanduser(args.master)
     if not os.path.isdir(args.master):
         sys.exit(f"フォルダが見つかりません: {args.master}")
     cfg = load_config(args.master)
-    {"inspect": cmd_inspect, "queue": cmd_queue, "record": cmd_record, "gap-ok": cmd_gap_ok}[args.cmd](args, cfg)
+    {"inspect": cmd_inspect, "queue": cmd_queue, "record": cmd_record, "gap-ok": cmd_gap_ok,
+     "research-list": cmd_research_list}[args.cmd](args, cfg)
 
 
 if __name__ == "__main__":

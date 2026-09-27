@@ -238,6 +238,71 @@ class TalentMasterSchemaTest(unittest.TestCase):
         self.assertIn("要再確認", held["@juuichi"])
         self.assertIn("他案件で接触あり", held["@hachi_new"])
 
+    def research(self, rows, days_ago=1):
+        when = (dt.date.today() - dt.timedelta(days=days_ago)).isoformat()
+        full = [{**{f: "" for f in tq.RESEARCH_FIELDS}, "researched_at_jst": when, "account_status": "存在", **r}
+                for r in rows]
+        with open(os.path.join(self.d, "research_results.csv"), "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=tq.RESEARCH_FIELDS)
+            w.writeheader()
+            w.writerows(full)
+
+    def classify_today(self, campaign):
+        cfg = tq.load_config(self.d)
+        ok, held, _ = tq.classify(self.d, cfg, campaign, dt.date.today())
+        return {r["key"]: r for r in ok}, {r["key"]: r["reasons"] for r in held}
+
+    def test_research_clears_optin_only_with_inquiry_evidence(self):
+        self.research([{"talent_id": "T3", "inquiry_policy": "DM可", "inquiry_evidence": "プロフに「お仕事依頼はDMへ」"}])
+        ok, _ = self.classify_today("IGGゲームイベント")
+        self.assertEqual(ok["@san"]["channel"], "DM")
+        self.research([{"talent_id": "T3", "inquiry_policy": "記載なし"}])
+        ok, held = self.classify_today("IGGゲームイベント")
+        self.assertIn("送信不可", held["@san"])
+
+    def test_research_channel_decision(self):
+        self.research([
+            {"x_handle": "@ichi", "dm_open": "no", "contact_email": "biz@example.com", "inquiry_policy": "メール可"},
+            {"talent_id": "T2", "inquiry_policy": "メール可"},
+            {"talent_id": "T4", "inquiry_policy": "依頼お断り"},
+            {"talent_id": "T11", "dm_open": "no"},
+        ])
+        ok, held = self.classify_today("IGGゲームイベント")
+        self.assertEqual(ok["@ichi"]["channel"], "メール")
+        self.assertEqual(ok["@ichi"]["contact_email"], "biz@example.com")
+        self.assertIn("メール指定だがアドレス未取得", held["@ni"])
+        self.assertIn("依頼お断り", held["@yon"])
+        self.assertIn("DM閉鎖・メール/フォームなし", held["@juuichi"])
+
+    def test_research_refreshes_audience_for_content_print(self):
+        self.research([{"talent_id": "T11", "x_followers": "5,200", "youtube_subscribers": "1.2万"}])
+        ok, held = self.classify_today("コンテンツプリント")
+        self.assertIn("@juuichi", ok)
+        self.research([{"talent_id": "T11", "x_followers": "4.1万"}])
+        ok, held = self.classify_today("コンテンツプリント")
+        self.assertIn("条件外 fit_content_print（no）", held["@juuichi"])
+
+    def test_stale_research_is_ignored(self):
+        self.research([{"talent_id": "T3", "inquiry_policy": "DM可"}], days_ago=45)
+        ok, held = self.classify_today("IGGゲームイベント")
+        self.assertIn("送信不可", held["@san"])
+
+    def test_research_list(self):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            tq.main(["--master", self.d, "research-list", "--campaign", "all"])
+        out_dir = os.path.join(self.d, "out")
+        path = [os.path.join(out_dir, n) for n in os.listdir(out_dir) if n.startswith("research_targets_全案件")][0]
+        with open(path, encoding="utf-8-sig") as f:
+            keys = {r["key"] for r in csv.DictReader(f)}
+        self.assertIn("@san", keys)        # オプトイン未記録 → 受付方針を調べれば解消しうる
+        self.assertIn("@juuichi", keys)    # プリントの数値再確認
+        self.assertIn("@go", keys)         # 個人か不明
+        self.assertNotIn("@yon", keys)     # IGG適合 unknown はリサーチでは解消できない
+        self.assertNotIn("@kyuu", keys)    # 連絡禁止
+        self.assertNotIn("@juu", keys)     # already queued
+        self.assertTrue(os.path.exists(os.path.join(self.d, "research_results.csv")))
+
     def test_missing_rule_column_stops_real_run(self):
         write(os.path.join(self.d, "talent_master.csv"), ["talent_id", "display_name", "x_handle"],
               [["T1", "いち", "ichi"]])

@@ -110,9 +110,6 @@
         "do_not_contact": [
           "yes"
         ],
-        "dm_open": [
-          "no"
-        ],
         "igg_status": [
           "送付不明（再送禁止）",
           "連絡禁止"
@@ -159,6 +156,50 @@
       },
       "notes_hold": [
         "要再確認：フォロワー／登録者数"
+      ]
+    }
+  },
+  "research": {
+    "valid_days": 30,
+    "clears_notes": {
+      "送信不可（オプトイン未記録）": {
+        "field": "inquiry_policy",
+        "values": [
+          "DM可",
+          "メール可",
+          "フォーム可"
+        ]
+      },
+      "要再確認：フォロワー／登録者数": {
+        "field": "x_followers",
+        "values": "any"
+      }
+    },
+    "audience_fit": {
+      "コンテンツプリント": {
+        "column": "fit_content_print",
+        "min": 3000,
+        "max_exclusive": 30000,
+        "fields": [
+          "x_followers",
+          "youtube_subscribers"
+        ],
+        "research_skip_below": 2000
+      }
+    },
+    "researchable_reasons": {
+      "common": [
+        "条件外 is_individual（unknown",
+        "条件外 is_japanese_activity（unknown",
+        "条件外 activity_status（不明",
+        "notes「送信不可」",
+        "DM閉鎖",
+        "メール指定だがアドレス未取得",
+        "フォーム指定だがURL未取得"
+      ],
+      "コンテンツプリント": [
+        "notes「要再確認",
+        "条件外 fit_content_print（unknown"
       ]
     }
   },

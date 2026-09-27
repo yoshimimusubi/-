@@ -29,7 +29,8 @@ Drive: [タレント台帳・制作物フォルダ（他端末照合待ち）](h
 台帳の列:
 - その案件の状態が `未接触`、その案件の適合が `yes`（`fit_igg` / `fit_content_print`）
 - `is_japanese_activity=yes`、`is_individual=yes`、`activity_status=活動中`
-- `do_not_contact` が yes でない、`dm_open` が no でない
+- `do_not_contact` が yes でない
+- 送付手段がある: DM が閉じていない、または DM が閉じていてもリサーチで公開メール／フォームが取れている
 - どちらの案件の状態も `送付不明（再送禁止）`・`連絡禁止` でない
 - もう一方の案件の状態が `未接触` か `対象外`（＝他案件で接触していない）
 
@@ -54,8 +55,34 @@ notes（書いてあったら保留）:
 | **送付可** | **315名** | **18名** |
 | 1日20件なら | 約16日分 | 1日分 |
 
-コンテンツプリントは、フォロワー数の再確認が済めば増える（再確認待ちが111名）。
-「送信不可（オプトイン未記録）」の扱い（そもそも送ってよいのか）は運用判断が必要。
+保留の多くはリサーチで解消できる（下の「リサーチで送付可を増やす」）。
+
+## リサーチで送付可を増やす
+
+保留理由のうち、次のものは公開プロフィールを調べれば解消しうる:
+
+| 保留理由 | リサーチで何が分かれば解消するか |
+|---|---|
+| notes「送信不可（オプトイン未記録）」 | プロフィール等に「お仕事依頼はDMへ／メールへ／フォームへ」の記載（`inquiry_policy`）。**DM開放だけでは解消しない** |
+| notes「要再確認：フォロワー／登録者数」（プリント） | 今日のフォロワー数・登録者数（3,000〜30,000 なら適合） |
+| 条件外 is_individual / is_japanese_activity / activity_status（unknown・不明） | 所属の有無、日本語活動、最新投稿日 |
+| DM閉鎖 | 公開ビジネスメール、または問い合わせフォーム → `channel` がメール／フォームになる |
+
+手順はスキル [.claude/skills/talent-contact-research/SKILL.md](../.claude/skills/talent-contact-research/SKILL.md)、
+貼り付け用プロンプトは [RESEARCH_PROMPT.md](RESEARCH_PROMPT.md)。
+
+```bash
+python3 ../tools/dm-ops/talent_queue.py --master . research-list --campaign all --include-sendable --limit 100
+```
+
+結果は作業フォルダの `research_results.csv` に1人1行で追記する。queue は次回から自動でこれを読み、
+台帳の値（活動状況・個人か・日本語活動・DM開放・数値）をリサーチ結果で上書きして判定する。
+30日より古いリサーチは使わない。対象人数の目安: 両案件で約1,750名（100名/回で約18回）。
+
+キューの `channel` 列:
+- `DM` … 送信元アカウントからDM
+- `メール` … `contact_email` 宛て（本人が「メールへ」と指定している場合や、DMが閉じている場合）
+- `フォーム` … `contact_form_url` から
 
 ## 手順
 
@@ -98,13 +125,13 @@ python3 ../tools/dm-ops/talent_queue.py --master . queue --campaign IGG
 python3 ../tools/dm-ops/talent_queue.py --master . queue --campaign プリント --cap 10
 ```
 
-`out/queue_<案件>_<日付>.csv` に、送信元アカウント・X URL・フォロワー数・数値確認日・notes 付きで出る。
+`out/queue_<案件>_<日付>.csv` に、送付手段（channel）・送信元アカウント・X URL・メール・フォロワー数・数値確認日・notes 付きで出る。
 `out/held_<案件>_<日付>.csv` に、保留した全員と理由が出る。
 
 ### 3. 送信と記録（1件ずつ）
 
 1. キューの `x_url` を開き、本人であること・活動中であること・DMが開いていることをその場で確認
-2. 送信元アカウントから手で送る
+2. `channel` が DM なら送信元アカウントから、メールなら `contact_email` 宛てに、フォームなら `contact_form_url` から手で送る
 3. 送った直後に記録する
    ```bash
    python3 ../tools/dm-ops/talent_queue.py --master . record --campaign IGG --key @aare_mine --result sent
@@ -125,7 +152,8 @@ Mac mini の送信ログが届いたら:
 
 ## Claude / Codex に任せる場合
 
-- やってよい: `inspect`、`queue --dry-run`、`queue`（gap-ok 済みのとき）、人が「送った」と言った分の `record`、保留理由の集計
+- やってよい: `inspect`、`queue --dry-run`、`queue`（gap-ok 済みのとき）、人が「送った」と言った分の `record`、保留理由の集計、
+  `research-list` とスキルに沿った公開プロフィールの確認（`research_results.csv` への追記）
 - やらない: X・YouTube の閲覧・送信・いいね・フォロー、自己判断での `gap-ok`、元ファイルの上書き、定期実行の変更
 
 ## テスト
