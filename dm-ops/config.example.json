@@ -1,85 +1,72 @@
 {
   "files": {
     "ledger": [
+      "talent_master*.csv",
       "*台帳*.csv",
-      "*台帳*.xlsx",
-      "*master*.csv"
+      "*台帳*.xlsx"
     ],
     "contacts": [
-      "*接触履歴*.csv",
-      "*接触履歴*.xlsx",
-      "*contact*.csv"
+      "contact_history*.csv",
+      "*接触履歴*.csv"
     ],
     "review": [
-      "*要確認*.csv",
-      "*要確認*.xlsx",
-      "*review*.csv"
+      "needs_review*.csv",
+      "*要確認*.csv"
+    ],
+    "aliases": [
+      "identity_aliases*.csv"
     ],
     "blocked": [
       "*再送禁止*.csv",
-      "*送付不明*.csv",
-      "*blocked*.csv"
+      "*送付不明*.csv"
     ],
     "both_sent": [
-      "*両案件*.csv",
-      "*両案件*.xlsx",
-      "*both*.csv"
+      "*両案件*.csv"
     ]
   },
+  "optional_files": [
+    "aliases",
+    "blocked",
+    "both_sent"
+  ],
   "columns": {
     "id": [
-      "タレントID",
       "talent_id",
-      "ID",
-      "id"
+      "タレントID"
     ],
     "name": [
+      "display_name",
       "タレント名",
       "名前",
-      "氏名",
-      "活動名",
-      "name"
+      "活動名"
     ],
     "x_handle": [
-      "Xハンドル",
-      "X ID",
-      "XID",
-      "X",
-      "Twitter",
       "x_handle",
-      "twitter"
+      "x_url",
+      "Xハンドル",
+      "X"
     ],
     "youtube": [
+      "youtube_url",
       "YouTube",
-      "YouTubeチャンネル",
-      "YouTube URL",
-      "チャンネルURL",
-      "youtube"
+      "チャンネルURL"
     ],
     "campaign": [
-      "案件",
-      "案件名",
-      "campaign"
+      "campaign",
+      "案件"
     ],
     "sent_at": [
+      "contact_at_jst",
       "送信日時",
-      "送付日",
-      "接触日",
-      "日時",
-      "sent_at",
-      "date"
+      "接触日"
     ],
     "review_status": [
       "対応状況",
-      "確認状況",
-      "ステータス",
-      "status"
+      "review_status"
     ],
     "review_reason": [
-      "要確認理由",
-      "理由",
-      "確認事項",
-      "reason"
+      "issue",
+      "要確認理由"
     ]
   },
   "review_resolved_values": [
@@ -91,18 +78,102 @@
   ],
   "campaigns": {
     "コンテンツプリント": [
+      "content_print",
       "プリント",
-      "コンテンツ",
-      "content print",
-      "contentprint"
+      "コンテンツ"
     ],
     "IGGゲームイベント": [
+      "igg",
       "IGG",
-      "ゲームイベント",
-      "IGGイベント",
-      "game event"
+      "ゲームイベント"
     ]
   },
+  "senders": {
+    "コンテンツプリント": "ukamoto_marino",
+    "IGGゲームイベント": "kocho_kurono"
+  },
+  "ledger_rules": {
+    "notes_column": "notes",
+    "common": {
+      "require": {
+        "is_japanese_activity": [
+          "yes"
+        ],
+        "is_individual": [
+          "yes"
+        ],
+        "activity_status": [
+          "活動中"
+        ]
+      },
+      "exclude": {
+        "do_not_contact": [
+          "yes"
+        ],
+        "dm_open": [
+          "no"
+        ],
+        "igg_status": [
+          "送付不明（再送禁止）",
+          "連絡禁止"
+        ],
+        "content_print_status": [
+          "送付不明（再送禁止）",
+          "連絡禁止"
+        ]
+      },
+      "notes_hold": [
+        "送信不可",
+        "already queued",
+        "連絡禁止",
+        "送付不明",
+        "再送禁止"
+      ]
+    },
+    "IGGゲームイベント": {
+      "require": {
+        "igg_status": [
+          "未接触"
+        ],
+        "fit_igg": [
+          "yes"
+        ],
+        "content_print_status": [
+          "未接触",
+          "対象外（理由をnotesへ）"
+        ]
+      }
+    },
+    "コンテンツプリント": {
+      "require": {
+        "content_print_status": [
+          "未接触"
+        ],
+        "fit_content_print": [
+          "yes"
+        ],
+        "igg_status": [
+          "未接触",
+          "対象外（理由をnotesへ）"
+        ]
+      },
+      "notes_hold": [
+        "要再確認：フォロワー／登録者数"
+      ]
+    }
+  },
+  "priority_notes": [
+    "IGG元リスト優先度=A",
+    "IGG元リスト優先度=B"
+  ],
+  "queue_extra_columns": [
+    "x_followers",
+    "youtube_subscribers",
+    "audience_checked_at_jst",
+    "dm_checked_at_jst",
+    "notes"
+  ],
+  "hold_if_other_campaign_contacted": true,
   "log_cutoff": "2026-07-11",
   "daily_cap": 20,
   "cooldown_days": 30

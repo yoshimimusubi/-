@@ -18,7 +18,10 @@
   5. 直近 cooldown_days 以内にどの案件でも接触している
   6. X / YouTube / タレントID のどれも無い（識別子不足）、または送付先（X/YouTube）が無い
   7. 同名の行が複数あり、識別子で区別できない
-  8. 接触履歴の案件名がどの案件にも当てはまらない（案件不明）
+  8. 接触履歴の案件名がどの案件にも当てはまらない（案件不明）／もう一方の案件で接触済み
+  9. 台帳の列が ledger_rules を満たさない（状態・適合・国内・個人・活動中・禁止）、
+     または notes に notes_hold の文言（「送信不可」「already queued」等）がある
+  identity_aliases があれば、同じ talent_id の別ハンドル・別URLでも照合する。
   列名は config の候補 → 列名のキーワード → 中身（x.com/〜・youtube.com/〜 等）の順で自動判定する。
   照合用ファイルで識別子の列が1つも判定できないときは、除外漏れを防ぐため本番の queue を止める。
   照合は ID・Xハンドル・YouTube・正規化した名前 のどれか1つでも一致すれば除外（安全側）。
@@ -119,6 +122,17 @@ YT_URL = re.compile(r"youtube\.com/|youtu\.be/|^UC[A-Za-z0-9_-]{22}$")
 AT_HANDLE = re.compile(r"^[@＠][A-Za-z0-9_]{1,15}$")
 
 
+IDENT_ROLES = ["id", "name", "x_handle", "youtube"]
+ROLES_BY_KIND = {
+    "contacts": IDENT_ROLES + ["campaign", "sent_at"],
+    "review": IDENT_ROLES + ["review_status", "review_reason"],
+}
+
+
+def roles_for(kind, cols):
+    return {r: cols.get(r, []) for r in ROLES_BY_KIND.get(kind, IDENT_ROLES)}
+
+
 def _hkey(h):
     return re.sub(r"\s", "", unicodedata.normalize("NFKC", h or "")).lower()
 
@@ -130,14 +144,16 @@ def resolve_columns(header, rows, cols):
         found = [c for c in cands if c in header]
         how = "設定" if found else ""
         for h in header:
-            if h in found:
-                continue
+            if found:
+                break  # 設定の列名が見つかった役割にはキーワード推定で列を足さない（誤読防止）
             hk = _hkey(h)
             if any(k in hk for k in HEADER_KEYWORDS.get(role, [])) or (role == "x_handle" and hk == "x"):
                 found.append(h)
                 how = how or "列名から推定"
         resolved[role], source[role] = found, how
     # 中身からの推定（X / YouTube の列が列名で見つからなかったときだけ）
+    if resolved["x_handle"] and resolved["youtube"]:
+        return resolved, source
     used = {c for v in resolved.values() for c in v}
     sample = rows[:300]
     for h in header:
@@ -148,10 +164,10 @@ def resolve_columns(header, rows, cols):
         if len(vals) < 3:
             continue
         ratio = lambda rx: sum(1 for v in vals if rx.search(unicodedata.normalize("NFKC", v))) / len(vals)
-        if ratio(YT_URL) >= 0.6:
+        if not source["youtube"] and ratio(YT_URL) >= 0.6:
             resolved["youtube"].append(h)
             source["youtube"] = source["youtube"] or "中身から推定"
-        elif ratio(X_URL) >= 0.6 or (not resolved["x_handle"] and ratio(AT_HANDLE) >= 0.6):
+        elif not source["x_handle"] and (ratio(X_URL) >= 0.6 or ratio(AT_HANDLE) >= 0.6):
             resolved["x_handle"].append(h)
             source["x_handle"] = source["x_handle"] or "中身から推定"
     return resolved, source
@@ -199,6 +215,13 @@ class Ident:
         self.name = pick(row, cols["name"])
         self.x = norm_x(pick(row, cols["x_handle"]))
         self.yt = norm_yt(pick(row, cols["youtube"]))
+        self.extra = set()
+
+    def add_aliases(self, aliases):
+        """identity_aliases（同じ talent_id の別ハンドル・別URL）を照合キーに足す。"""
+        if self.talent_id:
+            self.extra |= aliases.get(self.talent_id, set())
+        return self
 
     def strong_keys(self):
         ks = set()
@@ -208,7 +231,7 @@ class Ident:
             ks.add(("x", self.x))
         if self.yt:
             ks.add(("yt", self.yt))
-        return ks
+        return ks | self.extra
 
     def keys(self):
         ks = self.strong_keys()
@@ -265,26 +288,48 @@ def send_log_path(master):
     return os.path.join(master, "out", "send_log.csv")
 
 
+def load_aliases(master, cfg):
+    path = find_file(master, cfg["files"]["aliases"]) if "aliases" in cfg["files"] else None
+    out = defaultdict(set)
+    if not path:
+        return out
+    for r in read_table(path)[1]:
+        tid, typ, val = r.get("talent_id", ""), r.get("identifier_type", ""), r.get("identifier", "")
+        if not tid or not val:
+            continue
+        if typ in ("x_handle", "x_url") and norm_x(val):
+            out[tid].add(("x", norm_x(val)))
+        elif typ == "x_user_id":
+            out[tid].add(("xid", val.strip()))
+        elif typ.startswith("youtube") and norm_yt(val):
+            out[tid].add(("yt", norm_yt(val)))
+    return out
+
+
 def build_state(master, cfg):
     cols = cfg["columns"]
     files = cfg["files"]
+    optional = set(cfg.get("optional_files", []))
     state = {"blocked": KeyIndex(), "review": KeyIndex(), "both": KeyIndex(),
-             "contacts": KeyIndex(), "missing": [], "unmatchable": []}
+             "contacts": KeyIndex(), "missing": [], "unmatchable": [],
+             "aliases": load_aliases(master, cfg)}
+    aliases = state["aliases"]
 
     def load(kind):
-        path = find_file(master, files[kind])
+        path = find_file(master, files[kind]) if kind in files else None
         if not path:
-            state["missing"].append(kind)
+            if kind not in optional:
+                state["missing"].append(kind)
             return [], cols
         header, rows = read_table(path)
-        rc, _ = resolve_columns(header, rows, cols)
+        rc, _ = resolve_columns(header, rows, roles_for(kind, cols))
         if rows and not has_identifier(rc):
             state["unmatchable"].append(f"{kind}（{os.path.basename(path)}）")
         return rows, rc
 
     rows, c = load("blocked")
     for r in rows:
-        state["blocked"].add(Ident(r, c), {"reason": "送付不明・再送禁止"})
+        state["blocked"].add(Ident(r, c).add_aliases(aliases), {"reason": "送付不明・再送禁止"})
 
     resolved = [unicodedata.normalize("NFKC", s).lower() for s in cfg.get("review_resolved_values", [])]
     rows, c = load("review")
@@ -293,15 +338,15 @@ def build_state(master, cfg):
         if status and status in resolved:
             continue
         detail = pick(r, c["review_reason"]) or "要確認"
-        state["review"].add(Ident(r, c), {"reason": f"要確認: {detail}"})
+        state["review"].add(Ident(r, c).add_aliases(aliases), {"reason": f"要確認: {detail}"})
 
     rows, c = load("both_sent")
     for r in rows:
-        state["both"].add(Ident(r, c), {"reason": "両案件の送付証跡あり"})
+        state["both"].add(Ident(r, c).add_aliases(aliases), {"reason": "両案件の送付証跡あり"})
 
     rows, c = load("contacts")
     for r in rows:
-        state["contacts"].add(Ident(r, c), {
+        state["contacts"].add(Ident(r, c).add_aliases(aliases), {
             "campaign": pick(r, c["campaign"]),
             "date": parse_date(pick(r, c["sent_at"])),
             "source": "接触履歴",
@@ -356,11 +401,40 @@ def classify(master, cfg, campaign, today):
     if not ledger_path:
         sys.exit("台帳ファイルが見つかりません（config.json の files.ledger を確認）")
     header, ledger = read_table(ledger_path)
-    lc, _ = resolve_columns(header, ledger, cols)
+    lc, _ = resolve_columns(header, ledger, roles_for("ledger", cols))
     state["ledger_reachable"] = bool(lc["x_handle"] or lc["youtube"])
     cooldown = int(cfg.get("cooldown_days", 30))
+    hold_other = cfg.get("hold_if_other_campaign_contacted", True)
 
-    idents = [Ident(r, lc) for r in ledger]
+    rules = cfg.get("ledger_rules", {})
+    common, own = rules.get("common", {}), rules.get(campaign, {})
+    require = {**common.get("require", {}), **own.get("require", {})}
+    exclude = {**common.get("exclude", {}), **own.get("exclude", {})}
+    notes_hold = common.get("notes_hold", []) + own.get("notes_hold", [])
+    notes_col = rules.get("notes_column", "notes")
+    state["rule_missing_cols"] = sorted({c for c in list(require) + list(exclude) if c not in header}
+                                        | ({notes_col} if notes_hold and notes_col not in header else set()))
+
+    def rule_reasons(row):
+        out = []
+        for col, allowed in require.items():
+            v = (row.get(col) or "").strip()
+            if col not in header:
+                out.append(f"列なし {col}")
+            elif v not in allowed:
+                out.append(f"条件外 {col}（{v or '空欄'}）")
+        for col, banned in exclude.items():
+            v = (row.get(col) or "").strip()
+            if v in banned:
+                out.append(f"除外 {col}（{v}）")
+        notes = row.get(notes_col) or ""
+        for pat in notes_hold:
+            if pat in notes:
+                out.append(f"notes「{pat}」")
+        return out
+
+    idents = [Ident(r, lc).add_aliases(state["aliases"]) for r in ledger]
+    prio = cfg.get("priority_notes", [])
 
     # 同名チェック: 同じ正規化名の行があり、どれかに送付先（X/YouTube）が無い → どれが本人か決められない
     by_name = defaultdict(list)
@@ -376,7 +450,7 @@ def classify(master, cfg, campaign, today):
 
     ok, held, seen = [], [], set()
     for i in idents:
-        reasons = []
+        reasons = rule_reasons(i.row)
         if not i.strong_keys():
             reasons.append("識別子不足（X/YouTube/IDなし）")
         elif not i.reachable():
@@ -392,15 +466,25 @@ def classify(master, cfg, campaign, today):
                 reasons.append(f"{campaign}は送付済み（{h['source']}）")
             elif not hit:
                 reasons.append(f"案件不明の接触あり（{h['source']}: {h['campaign'] or '空欄'}）")
+            elif hold_other:
+                reasons.append(f"他案件で接触あり（{'・'.join(hit)}）")
             if h["date"] and (today - h["date"]).days < cooldown:
                 reasons.append(f"直近{cooldown}日以内に接触（{h['date']}）")
         pk = i.primary()
         if pk in seen:
             reasons.append("台帳内の重複行")
         seen.add(pk)
-        rec = {"key": pk, "name": i.name, "x_handle": i.x and "@" + i.x, "youtube": i.yt,
-               "talent_id": i.talent_id, "reasons": " / ".join(dict.fromkeys(reasons))}
+        rec = {"key": pk, "name": i.name, "x_handle": i.x and "@" + i.x,
+               "x_url": i.x and f"https://x.com/{i.x}", "youtube": i.yt, "talent_id": i.talent_id,
+               "sender": cfg.get("senders", {}).get(campaign, "")}
+        for c in cfg.get("queue_extra_columns", []):
+            rec[c] = i.row.get(c, "")
+        rec["reasons"] = " / ".join(dict.fromkeys(reasons))
+        # 優先度: notes に priority_notes の文言があるものを先に（同順位は台帳の並び）
+        notes = i.row.get(notes_col) or ""
+        rec["_rank"] = next((n for n, p in enumerate(prio) if p in notes), len(prio))
         (held if reasons else ok).append(rec)
+    ok.sort(key=lambda r: r["_rank"])
     return ok, held, state
 
 
@@ -413,11 +497,14 @@ def cmd_inspect(args, cfg):
     for kind, pat in cfg["files"].items():
         path = find_file(master, pat)
         if not path:
-            print(f"[{kind}] 見つかりません（パターン {pat}）\n")
-            problems.append(f"{kind} のファイルが見つからない")
+            if kind in cfg.get("optional_files", []):
+                print(f"[{kind}] なし（省略可。台帳の列で判定）\n")
+            else:
+                print(f"[{kind}] 見つかりません（パターン {pat}）\n")
+                problems.append(f"{kind} のファイルが見つからない")
             continue
         header, rows = read_table(path)
-        rc, how = resolve_columns(header, rows, cfg["columns"])
+        rc, how = resolve_columns(header, rows, roles_for(kind, cfg["columns"]))
         print(f"[{kind}] {os.path.basename(path)}  {len(rows)}行")
         print("   列: " + ", ".join(header))
         for role, found in rc.items():
@@ -460,7 +547,7 @@ def cmd_inspect(args, cfg):
 def write_csv(path, rows, fields):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
 
@@ -484,6 +571,8 @@ def cmd_queue(args, cfg):
         stops.append("照合できる列が判定できないファイル: " + ", ".join(state["unmatchable"]))
     if not state["ledger_reachable"]:
         stops.append("台帳に X / YouTube の列が見つかりません")
+    if state["rule_missing_cols"]:
+        stops.append("ledger_rules の列が台帳にありません: " + ", ".join(state["rule_missing_cols"]))
     for m in stops:
         if not args.dry_run:
             sys.exit(f"停止: {m}（除外漏れの恐れ。inspect で列を確認し config.json を直してください）")
@@ -494,7 +583,8 @@ def cmd_queue(args, cfg):
     stamp = today.isoformat()
     tag = "DRYRUN_" if args.dry_run or not gap_ok else ""
     out = os.path.join(master, "out")
-    fields = ["key", "name", "x_handle", "youtube", "talent_id", "reasons"]
+    fields = (["key", "name", "x_handle", "x_url", "youtube", "talent_id", "sender"]
+              + cfg.get("queue_extra_columns", []) + ["reasons"])
     qpath = os.path.join(out, f"{tag}queue_{campaign}_{stamp}.csv")
     hpath = os.path.join(out, f"{tag}held_{campaign}_{stamp}.csv")
     write_csv(qpath, batch, fields)
@@ -503,8 +593,9 @@ def cmd_queue(args, cfg):
     counts = defaultdict(int)
     for h in held:
         for r in h["reasons"].split(" / "):
-            counts[re.sub(r"（.*?）|: .*", "", r)] += 1
-    print(f"案件 {campaign} / {stamp}{' / DRY RUN（送信禁止）' if tag else ''}")
+            counts[re.sub(r"（.*$|: .*$", "", r)] += 1
+    sender = cfg.get("senders", {}).get(campaign)
+    print(f"案件 {campaign}{f'（送信元 @{sender}）' if sender else ''} / {stamp}{' / DRY RUN（送信禁止）' if tag else ''}")
     print(f"  台帳 {len(ok) + len(held)}名 → 送付可 {len(ok)}名（本日分 {len(batch)}名・上限 {cap}）/ 保留 {len(held)}名")
     for r, n in sorted(counts.items(), key=lambda x: -x[1]):
         print(f"    保留理由 {r}: {n}")
