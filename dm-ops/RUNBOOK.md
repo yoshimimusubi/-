@@ -1,5 +1,7 @@
 # タレントDM送付 運用手順（talent-master 版）
 
+対象案件: **コンテンツプリント** / **IGGゲームイベント**
+
 `~/dm-ops/talent-master/` の6ファイルを「送ってよい相手だけを毎日少しずつ抜き出す」ための手順。
 送信操作は必ず人が確認してから行う。ツールはキューを作るだけで、X・YouTube には一切アクセスしない。
 
@@ -24,10 +26,33 @@ python3 tools/dm-ops/talent_queue.py inspect
 ```
 
 `inspect` は6ファイルの行数・列名と、どの列を「ID／名前／X／YouTube／案件／日時」として読んだかを表示する。
-- 役割が割り当たっていない列があれば `talent-master/config.json` の `columns` に実際の列名を足す。
-- ファイルが見つからない場合は `files` のパターンを実ファイル名にする。
-- `campaign_aliases` の `A` / `B` を実際の案件名に変える（例: `"A": ["〇〇キャンペーン"]`）。
-  **ここを直さないと「その案件は送付済み」の判定が効かない。** 接触履歴の「案件」列に入っている表記をそのまま書く。
+
+### 台帳の列名が分からなくても大丈夫な理由
+
+列は次の順で自動判定する。inspect の各行末の（設定）（列名から推定）（中身から推定）が根拠。
+1. `config.json` の `columns` に書いた列名と完全一致
+2. 列名に「名前・活動名・表示名」「Twitter・Xアカウント」「YouTube・チャンネル」「案件」「日時・送付日」などを含む
+3. 列の中身の6割以上が `x.com/〜`・`twitter.com/〜`・`@〜` → X列、`youtube.com/〜`・`UC〜` → YouTube列
+
+inspect の最後に「要対応」が出なければそのまま使える。出た場合だけ直す:
+- 「台帳に X / YouTube の列が見つからない」→ 台帳の該当列名を `columns.x_handle` / `columns.youtube` に足す
+- 「照合できる列が無い」→ そのファイルの名前やハンドルの列名を `columns` に足す
+- 「ファイルが見つからない」→ `files` のパターンを実ファイル名にする
+
+これらが残っている間は、本番の queue は止まる（除外漏れ防止）。
+
+### 案件名の確認
+
+案件名は `config.json` の `campaigns` に設定済み:
+
+| 正式名 | `--campaign` に使える略称・接触履歴で同じ案件とみなす表記 |
+|---|---|
+| コンテンツプリント | プリント / コンテンツ / content print |
+| IGGゲームイベント | IGG / ゲームイベント / IGGイベント / game event |
+
+inspect は接触履歴の「案件」列の値ごとに、どちらの案件と判定したかを表示する。
+**「案件不明（保留扱い）」になっている表記があれば、`campaigns` の該当案件に足す。**
+足さなくても送りすぎにはならない（その相手は保留に回る）が、送付可の人数が減る。
 
 xlsx の場合は `pip3 install openpyxl` か、CSV に書き出してから使う。
 
@@ -39,7 +64,7 @@ CSV送信ログは **2026-07-11 より新しいものが見つかっていない
 1. X（各アカウント）と YouTube の送信済みメッセージを 2026-07-11 以降でさかのぼる
 2. 見つかった送付を `接触履歴` に追記する（元ファイルを直接いじりたくなければ、`record` で1件ずつ入れてもよい）
    ```bash
-   python3 tools/dm-ops/talent_queue.py record --campaign A --key @handle --result sent --note "7/11以降 送信済みBOXで確認"
+   python3 tools/dm-ops/talent_queue.py record --campaign IGG --key @handle --result sent --note "7/11以降 送信済みBOXで確認"
    ```
    送ったかどうか確信が持てない相手は `--result unknown`（以後、全案件で再送禁止になる）
 3. 確認が終わったら記録を残す
@@ -52,13 +77,15 @@ CSV送信ログは **2026-07-11 より新しいものが見つかっていない
 ## 2. 本日分のキューを作る
 
 ```bash
-python3 tools/dm-ops/talent_queue.py queue --campaign A            # 上限は config の daily_cap（初期20）
-python3 tools/dm-ops/talent_queue.py queue --campaign A --cap 10   # 上限を変える
+python3 tools/dm-ops/talent_queue.py queue --campaign IGG                  # 上限は config の daily_cap（初期20）
+python3 tools/dm-ops/talent_queue.py queue --campaign プリント --cap 10    # 上限を変える
 ```
 
 出力（`talent-master/out/`）:
-- `queue_A_YYYY-MM-DD.csv` … 本日送ってよい相手（上限件数まで）
-- `held_A_YYYY-MM-DD.csv` … 送らない相手と理由
+- `queue_<案件名>_YYYY-MM-DD.csv` … 本日送ってよい相手（上限件数まで）
+- `held_<案件名>_YYYY-MM-DD.csv` … 送らない相手と理由
+
+`--campaign` は正式名か上の略称のみ。打ち間違い（例: `IGGイベンド`）は止まる。
 
 キューに入る条件は「以下のどれにも当たらない」こと。ID・Xハンドル・YouTube・名前のどれか1つでも一致すれば除外（安全側）。
 
@@ -67,23 +94,24 @@ python3 tools/dm-ops/talent_queue.py queue --campaign A --cap 10   # 上限を�
 | 送付不明・再送禁止 | 再送禁止リスト、または record で unknown にした相手 |
 | 要確認 | 要確認リストに載っていて、対応状況が「解消／確認済」でない |
 | 両案件の送付証跡あり | もう送る案件がない |
-| ○案件は送付済み | 接触履歴 or 送信ログに同じ案件の送付がある |
-| 案件不明の接触あり | 接触履歴にあるが案件列が空 → 人が確認 |
+| ○○は送付済み | 接触履歴 or 送信ログに同じ案件の送付がある |
+| 案件不明の接触あり | 接触履歴にあるが案件列が空、またはどちらの案件とも判定できない → 人が確認 |
+| 送付先なし | ID や名前はあるが X / YouTube が無い |
 | 直近30日以内に接触 | 別案件でも間隔をあける（`cooldown_days`） |
 | 識別子不足 | X / YouTube / ID がどれも無い |
-| 同名あり・識別子で区別不可 | 同じ名前の行があり、片方に識別子が無い |
+| 同名あり・識別子で区別不可 | 同じ名前の行があり、どれかに X / YouTube が無い |
 | 台帳内の重複行 | 同じ相手が台帳に2行以上ある（2行目以降を保留） |
 
-照合用ファイル（再送禁止・要確認・両案件・接触履歴）が1つでも見つからないと、本番の queue は止まる。
+照合用ファイル（再送禁止・要確認・両案件・接触履歴）が1つでも見つからない、または照合できる列が判定できないと、本番の queue は止まる。
 
 ## 3〜4. 送信と記録
 
 - キューCSVを上から1件ずつ、**相手のプロフィールを開いて本人・活動中であることを確認してから**手動で送る。
 - 送った直後に1件ずつ記録する（まとめて後で、にしない）:
   ```bash
-  python3 tools/dm-ops/talent_queue.py record --campaign A --key @aoi_ch --result sent
-  python3 tools/dm-ops/talent_queue.py record --campaign A --key @xxx --result failed --note "DM閉鎖"
-  python3 tools/dm-ops/talent_queue.py record --campaign A --key @yyy --result unknown --note "送信ボタン後にエラー"
+  python3 tools/dm-ops/talent_queue.py record --campaign IGG --key @aoi_ch --result sent
+  python3 tools/dm-ops/talent_queue.py record --campaign IGG --key @xxx --result failed --note "DM閉鎖"
+  python3 tools/dm-ops/talent_queue.py record --campaign IGG --key @yyy --result unknown --note "送信ボタン後にエラー"
   ```
 - 記録は `out/send_log.csv` に追記され、次回の queue から自動で除外に使われる。
   - `sent` … その案件は以後除外、他案件も cooldown 期間は除外

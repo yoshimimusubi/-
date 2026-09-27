@@ -6,8 +6,8 @@
 
 使い方:
   python3 talent_queue.py inspect  [--master DIR]
-  python3 talent_queue.py queue    --campaign A [--master DIR] [--cap N] [--dry-run]
-  python3 talent_queue.py record   --campaign A --key @handle --result sent|failed|unknown [--note ...]
+  python3 talent_queue.py queue    --campaign IGG [--master DIR] [--cap N] [--dry-run]
+  python3 talent_queue.py record   --campaign IGG --key @handle --result sent|failed|unknown [--note ...]
   python3 talent_queue.py gap-ok   --checked-by 名前 --note "7/11以降の送付をX送信済みBOXで確認"
 
 安全装置（どれか1つでも該当すれば送付キューに入れない＝保留リストへ）:
@@ -16,8 +16,11 @@
   3. 両案件の送付証跡がある
   4. 同じ案件で接触履歴 or 本ツールの送信ログがある
   5. 直近 cooldown_days 以内にどの案件でも接触している
-  6. X / YouTube / タレントID のどれも無い（識別子不足）
+  6. X / YouTube / タレントID のどれも無い（識別子不足）、または送付先（X/YouTube）が無い
   7. 同名の行が複数あり、識別子で区別できない
+  8. 接触履歴の案件名がどの案件にも当てはまらない（案件不明）
+  列名は config の候補 → 列名のキーワード → 中身（x.com/〜・youtube.com/〜 等）の順で自動判定する。
+  照合用ファイルで識別子の列が1つも判定できないときは、除外漏れを防ぐため本番の queue を止める。
   照合は ID・Xハンドル・YouTube・正規化した名前 のどれか1つでも一致すれば除外（安全側）。
 
 さらに、送信ログの空白期間（log_cutoff 以降）が未確認のうちは queue は
@@ -99,6 +102,65 @@ def pick(row, candidates):
     return ""
 
 
+# ---------- 列の自動判定 ----------
+
+HEADER_KEYWORDS = {
+    "id": ["タレントid", "talentid", "talent_id"],
+    "name": ["名前", "氏名", "タレント名", "活動名", "名義", "表示名", "name"],
+    "x_handle": ["twitter", "ツイッター", "xid", "xアカウント", "xハンドル", "xurl", "xのid", "x(旧twitter)"],
+    "youtube": ["youtube", "ユーチューブ", "チャンネル"],
+    "campaign": ["案件", "campaign", "キャンペーン"],
+    "sent_at": ["日時", "日付", "送信日", "送付日", "接触日", "date"],
+    "review_status": ["対応状況", "確認状況", "ステータス", "status", "状態"],
+    "review_reason": ["要確認理由", "理由", "確認事項", "reason"],
+}
+X_URL = re.compile(r"(?:x|twitter)\.com/", re.I)
+YT_URL = re.compile(r"youtube\.com/|youtu\.be/|^UC[A-Za-z0-9_-]{22}$")
+AT_HANDLE = re.compile(r"^[@＠][A-Za-z0-9_]{1,15}$")
+
+
+def _hkey(h):
+    return re.sub(r"\s", "", unicodedata.normalize("NFKC", h or "")).lower()
+
+
+def resolve_columns(header, rows, cols):
+    """役割ごとに読む列（優先順）と、その判定根拠を返す。"""
+    resolved, source = {}, {}
+    for role, cands in cols.items():
+        found = [c for c in cands if c in header]
+        how = "設定" if found else ""
+        for h in header:
+            if h in found:
+                continue
+            hk = _hkey(h)
+            if any(k in hk for k in HEADER_KEYWORDS.get(role, [])) or (role == "x_handle" and hk == "x"):
+                found.append(h)
+                how = how or "列名から推定"
+        resolved[role], source[role] = found, how
+    # 中身からの推定（X / YouTube の列が列名で見つからなかったときだけ）
+    used = {c for v in resolved.values() for c in v}
+    sample = rows[:300]
+    for h in header:
+        if h in used:
+            continue
+        vals = [str(r.get(h) or "").strip() for r in sample]
+        vals = [v for v in vals if v]
+        if len(vals) < 3:
+            continue
+        ratio = lambda rx: sum(1 for v in vals if rx.search(unicodedata.normalize("NFKC", v))) / len(vals)
+        if ratio(YT_URL) >= 0.6:
+            resolved["youtube"].append(h)
+            source["youtube"] = source["youtube"] or "中身から推定"
+        elif ratio(X_URL) >= 0.6 or (not resolved["x_handle"] and ratio(AT_HANDLE) >= 0.6):
+            resolved["x_handle"].append(h)
+            source["x_handle"] = source["x_handle"] or "中身から推定"
+    return resolved, source
+
+
+def has_identifier(resolved):
+    return any(resolved[r] for r in ("id", "name", "x_handle", "youtube"))
+
+
 # ---------- 正規化 ----------
 
 def norm_x(v):
@@ -154,6 +216,9 @@ class Ident:
             ks.add(("name", norm_name(self.name)))
         return ks
 
+    def reachable(self):
+        return bool(self.x or self.yt)
+
     def primary(self):
         if self.x:
             return "@" + self.x
@@ -204,33 +269,41 @@ def build_state(master, cfg):
     cols = cfg["columns"]
     files = cfg["files"]
     state = {"blocked": KeyIndex(), "review": KeyIndex(), "both": KeyIndex(),
-             "contacts": KeyIndex(), "missing": []}
+             "contacts": KeyIndex(), "missing": [], "unmatchable": []}
 
     def load(kind):
         path = find_file(master, files[kind])
         if not path:
             state["missing"].append(kind)
-            return []
-        return read_table(path)[1]
+            return [], cols
+        header, rows = read_table(path)
+        rc, _ = resolve_columns(header, rows, cols)
+        if rows and not has_identifier(rc):
+            state["unmatchable"].append(f"{kind}（{os.path.basename(path)}）")
+        return rows, rc
 
-    for r in load("blocked"):
-        state["blocked"].add(Ident(r, cols), {"reason": "送付不明・再送禁止"})
+    rows, c = load("blocked")
+    for r in rows:
+        state["blocked"].add(Ident(r, c), {"reason": "送付不明・再送禁止"})
 
-    resolved = [s.lower() for s in cfg.get("review_resolved_values", [])]
-    for r in load("review"):
-        status = pick(r, cols["review_status"]).lower()
+    resolved = [unicodedata.normalize("NFKC", s).lower() for s in cfg.get("review_resolved_values", [])]
+    rows, c = load("review")
+    for r in rows:
+        status = unicodedata.normalize("NFKC", pick(r, c["review_status"])).lower()
         if status and status in resolved:
             continue
-        detail = pick(r, cols["review_reason"]) or "要確認"
-        state["review"].add(Ident(r, cols), {"reason": f"要確認: {detail}"})
+        detail = pick(r, c["review_reason"]) or "要確認"
+        state["review"].add(Ident(r, c), {"reason": f"要確認: {detail}"})
 
-    for r in load("both_sent"):
-        state["both"].add(Ident(r, cols), {"reason": "両案件の送付証跡あり"})
+    rows, c = load("both_sent")
+    for r in rows:
+        state["both"].add(Ident(r, c), {"reason": "両案件の送付証跡あり"})
 
-    for r in load("contacts"):
-        state["contacts"].add(Ident(r, cols), {
-            "campaign": pick(r, cols["campaign"]),
-            "date": parse_date(pick(r, cols["sent_at"])),
+    rows, c = load("contacts")
+    for r in rows:
+        state["contacts"].add(Ident(r, c), {
+            "campaign": pick(r, c["campaign"]),
+            "date": parse_date(pick(r, c["sent_at"])),
             "source": "接触履歴",
         })
 
@@ -250,13 +323,30 @@ def build_state(master, cfg):
     return state
 
 
-def campaign_matches(value, campaign, aliases):
+def campaign_names(cfg, campaign):
+    return [norm_name(n) for n in [campaign] + cfg["campaigns"].get(campaign, [])]
+
+
+def campaign_matches(value, campaign, cfg):
     v = norm_name(value)
     if not v:
         return False
-    names = [norm_name(n) for n in [campaign] + aliases.get(campaign, [])]
-    # 1文字の案件名（A/B など）は部分一致だと誤爆するので完全一致のみ
-    return any(n and (v == n if len(n) == 1 else n in v) for n in names)
+    # 1文字の案件名は部分一致だと誤爆するので完全一致のみ
+    return any(n and (v == n if len(n) == 1 else n in v) for n in campaign_names(cfg, campaign))
+
+
+def match_campaigns(value, cfg):
+    return [c for c in cfg["campaigns"] if campaign_matches(value, c, cfg)]
+
+
+def resolve_campaign(cfg, value):
+    """--campaign に渡された正式名・略称を正式名に揃える。知らない名前は止める（打ち間違い対策）。"""
+    v = norm_name(value)
+    for c in cfg["campaigns"]:
+        if v in campaign_names(cfg, c):
+            return c
+    sys.exit(f"案件名 '{value}' は設定にありません。使える名前: " +
+             " / ".join(f"{c}（{', '.join(cfg['campaigns'][c]) or '-'}）" for c in cfg["campaigns"]))
 
 
 def classify(master, cfg, campaign, today):
@@ -265,13 +355,14 @@ def classify(master, cfg, campaign, today):
     ledger_path = find_file(master, cfg["files"]["ledger"])
     if not ledger_path:
         sys.exit("台帳ファイルが見つかりません（config.json の files.ledger を確認）")
-    _, ledger = read_table(ledger_path)
-    aliases = cfg.get("campaign_aliases", {})
+    header, ledger = read_table(ledger_path)
+    lc, _ = resolve_columns(header, ledger, cols)
+    state["ledger_reachable"] = bool(lc["x_handle"] or lc["youtube"])
     cooldown = int(cfg.get("cooldown_days", 30))
 
-    idents = [Ident(r, cols) for r in ledger]
+    idents = [Ident(r, lc) for r in ledger]
 
-    # 同名チェック: 同じ正規化名で、強い識別子が「無い行がある」or「行ごとに食い違う」
+    # 同名チェック: 同じ正規化名の行があり、どれかに送付先（X/YouTube）が無い → どれが本人か決められない
     by_name = defaultdict(list)
     for i in idents:
         if norm_name(i.name):
@@ -280,7 +371,7 @@ def classify(master, cfg, campaign, today):
     for n, group in by_name.items():
         if len(group) < 2:
             continue
-        if any(not g.strong_keys() for g in group):
+        if any(not g.reachable() for g in group):
             ambiguous_names.add(n)
 
     ok, held, seen = [], [], set()
@@ -288,16 +379,19 @@ def classify(master, cfg, campaign, today):
         reasons = []
         if not i.strong_keys():
             reasons.append("識別子不足（X/YouTube/IDなし）")
+        elif not i.reachable():
+            reasons.append("送付先なし（X/YouTubeなし）")
         if norm_name(i.name) in ambiguous_names:
             reasons.append("同名あり・識別子で区別不可")
         for kind in ("blocked", "review", "both"):
             for h in state[kind].hits(i):
                 reasons.append(h["reason"])
         for h in state["contacts"].hits(i):
-            if campaign_matches(h["campaign"], campaign, aliases):
-                reasons.append(f"{campaign}案件は送付済み（{h['source']}）")
-            elif not h["campaign"]:
-                reasons.append(f"案件不明の接触あり（{h['source']}）")
+            hit = match_campaigns(h["campaign"], cfg)
+            if campaign in hit:
+                reasons.append(f"{campaign}は送付済み（{h['source']}）")
+            elif not hit:
+                reasons.append(f"案件不明の接触あり（{h['source']}: {h['campaign'] or '空欄'}）")
             if h["date"] and (today - h["date"]).days < cooldown:
                 reasons.append(f"直近{cooldown}日以内に接触（{h['date']}）")
         pk = i.primary()
@@ -315,26 +409,52 @@ def classify(master, cfg, campaign, today):
 def cmd_inspect(args, cfg):
     master = args.master
     print(f"設定: {cfg['_path']}\nフォルダ: {master}\n")
+    problems = []
     for kind, pat in cfg["files"].items():
         path = find_file(master, pat)
         if not path:
-            print(f"[{kind}] 見つかりません（パターン {pat}）")
+            print(f"[{kind}] 見つかりません（パターン {pat}）\n")
+            problems.append(f"{kind} のファイルが見つからない")
             continue
         header, rows = read_table(path)
+        rc, how = resolve_columns(header, rows, cfg["columns"])
         print(f"[{kind}] {os.path.basename(path)}  {len(rows)}行")
         print("   列: " + ", ".join(header))
-        for role, cands in cfg["columns"].items():
-            hit = next((c for c in cands if c in header), None)
-            if hit:
-                print(f"   {role:14s} → {hit}")
+        for role, found in rc.items():
+            if found:
+                print(f"   {role:14s} → {', '.join(found)}（{how[role]}）")
+        if kind == "ledger" and not (rc["x_handle"] or rc["youtube"]):
+            problems.append("台帳に X / YouTube の列が見つからない（送付先が特定できない）")
+        elif not has_identifier(rc):
+            problems.append(f"{kind} に照合できる列（ID/名前/X/YouTube）が無い")
+        if kind == "contacts":
+            if not rc["campaign"]:
+                problems.append("接触履歴に案件列が無い（全件『案件不明』で保留になる）")
+            else:
+                counts = defaultdict(int)
+                for r in rows:
+                    counts[pick(r, rc["campaign"])] += 1
+                print("   案件列の値 → 判定:")
+                for v, n in sorted(counts.items(), key=lambda x: -x[1]):
+                    hit = match_campaigns(v, cfg)
+                    label = " / ".join(hit) if hit else "案件不明（保留扱い）"
+                    print(f"      {v or '(空欄)'}: {n}件 → {label}")
         print()
+    assigned = {find_file(master, p) for p in cfg["files"].values()}
     others = [n for n in sorted(os.listdir(master))
-              if os.path.isfile(os.path.join(master, n))
-              and not any(find_file(master, p) == os.path.join(master, n) for p in cfg["files"].values())]
+              if os.path.isfile(os.path.join(master, n)) and os.path.join(master, n) not in assigned
+              and n != "config.json"]
     if others:
-        print("どの役割にも割り当てられていないファイル: " + ", ".join(others))
+        print("どの役割にも割り当てられていないファイル: " + ", ".join(others) + "\n")
+    print("案件: " + " / ".join(cfg["campaigns"]))
     gap = gap_state_path(master)
-    print("\n送信ログ空白期間の確認: " + ("済み" if os.path.exists(gap) else f"未確認（{cfg['log_cutoff']} 以降）"))
+    print("送信ログ空白期間の確認: " + ("済み" if os.path.exists(gap) else f"未確認（{cfg['log_cutoff']} 以降）"))
+    if problems:
+        print("\n要対応:")
+        for m in problems:
+            print("  - " + m)
+    else:
+        print("\n列の判定に問題はありません。上の『→』が正しいかだけ目で確認してください。")
 
 
 def write_csv(path, rows, fields):
@@ -355,12 +475,19 @@ def cmd_queue(args, cfg):
                  "  python3 talent_queue.py gap-ok --checked-by 名前 --note 確認内容\n"
                  "を実行してください。中身だけ見たい場合は --dry-run を付けてください。")
 
-    ok, held, state = classify(master, cfg, args.campaign, today)
+    campaign = resolve_campaign(cfg, args.campaign)
+    ok, held, state = classify(master, cfg, campaign, today)
+    stops = []
     if state["missing"]:
-        missing = ", ".join(state["missing"])
+        stops.append("照合用ファイルが見つかりません: " + ", ".join(state["missing"]))
+    if state["unmatchable"]:
+        stops.append("照合できる列が判定できないファイル: " + ", ".join(state["unmatchable"]))
+    if not state["ledger_reachable"]:
+        stops.append("台帳に X / YouTube の列が見つかりません")
+    for m in stops:
         if not args.dry_run:
-            sys.exit(f"停止: 照合用ファイルが見つかりません: {missing}（除外漏れの恐れ）")
-        print(f"警告: 照合用ファイルが見つかりません: {missing}")
+            sys.exit(f"停止: {m}（除外漏れの恐れ。inspect で列を確認し config.json を直してください）")
+        print(f"警告: {m}")
 
     cap = args.cap if args.cap is not None else int(cfg.get("daily_cap", 20))
     batch, rest = ok[:cap], ok[cap:]
@@ -368,8 +495,8 @@ def cmd_queue(args, cfg):
     tag = "DRYRUN_" if args.dry_run or not gap_ok else ""
     out = os.path.join(master, "out")
     fields = ["key", "name", "x_handle", "youtube", "talent_id", "reasons"]
-    qpath = os.path.join(out, f"{tag}queue_{args.campaign}_{stamp}.csv")
-    hpath = os.path.join(out, f"{tag}held_{args.campaign}_{stamp}.csv")
+    qpath = os.path.join(out, f"{tag}queue_{campaign}_{stamp}.csv")
+    hpath = os.path.join(out, f"{tag}held_{campaign}_{stamp}.csv")
     write_csv(qpath, batch, fields)
     write_csv(hpath, held, fields)
 
@@ -377,7 +504,7 @@ def cmd_queue(args, cfg):
     for h in held:
         for r in h["reasons"].split(" / "):
             counts[re.sub(r"（.*?）|: .*", "", r)] += 1
-    print(f"案件 {args.campaign} / {stamp}{' / DRY RUN（送信禁止）' if tag else ''}")
+    print(f"案件 {campaign} / {stamp}{' / DRY RUN（送信禁止）' if tag else ''}")
     print(f"  台帳 {len(ok) + len(held)}名 → 送付可 {len(ok)}名（本日分 {len(batch)}名・上限 {cap}）/ 保留 {len(held)}名")
     for r, n in sorted(counts.items(), key=lambda x: -x[1]):
         print(f"    保留理由 {r}: {n}")
@@ -387,6 +514,7 @@ def cmd_queue(args, cfg):
 
 
 def cmd_record(args, cfg):
+    args.campaign = resolve_campaign(cfg, args.campaign)
     path = send_log_path(args.master)
     new = not os.path.exists(path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
