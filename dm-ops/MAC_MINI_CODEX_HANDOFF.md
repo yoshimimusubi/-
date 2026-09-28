@@ -1,4 +1,8 @@
-# Mac mini の Codex への依頼文
+# Mac mini の Codex への依頼文（完了済み・使わない）
+
+> **2026-09-27 に完了。** 照合結果は Drive「タレント台帳_統合正本_2026-09-27_両端末照合済み」
+> （https://drive.google.com/drive/folders/11EE9qCD4PLtYVTiHADLKCj_SOWsuRhnY）。下の共有フォルダは削除済み。
+> 次の依頼は [MAC_MINI_CODEX_AUDIT.md](MAC_MINI_CODEX_AUDIT.md)。以下は記録として残す。
 
 下の枠内をそのまま Mac mini の Codex に貼り付ける。
 

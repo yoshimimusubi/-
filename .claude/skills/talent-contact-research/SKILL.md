@@ -15,7 +15,7 @@ description: >
 
 ## 使うもの
 
-- 作業フォルダ: 台帳 CSV と `config.json` がある場所（例 `~/dm-ops/talent-master-20260927`）。以下 `$M`
+- 作業フォルダ: 台帳 CSV と `config.json` がある場所（例 `~/dm-ops/talent-master-20260927-canonical`）。以下 `$M`
 - ツール: `dm-ops/talent_queue.py`（このリポジトリ）。以下 `$T`
 - ブラウザ: Mac 上の Chrome（Claude in Chrome）など、**X に送信元アカウントでログイン済み**のもの
 

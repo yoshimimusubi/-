@@ -10,14 +10,14 @@
 今回は何も送りません。
 
 ■ 準備
-- リポジトリ: ~/dm-ops/tools（無ければ git clone -b claude/talent-list-execution-9q6tav https://github.com/yoshimimusubi/-.git ~/dm-ops/tools）
+- リポジトリ: ~/dm-ops/tools（無ければ git clone -b claude/codex-chat-task-handoff-ntokd5 https://github.com/yoshimimusubi/-.git ~/dm-ops/tools）
 - 手順と記入基準: ~/dm-ops/tools/.claude/skills/talent-contact-research/SKILL.md と references/fields.md を最初に読む
-- 作業フォルダ: ~/dm-ops/talent-master-20260927（台帳 CSV と config.json がある場所）
+- 作業フォルダ: ~/dm-ops/talent-master-20260927-canonical（台帳 CSV と config.json がある場所）
 - ブラウザ: X に送信元アカウントでログイン済みの Chrome（IGG は @kocho_kurono、コンテンツプリントは @ukamoto_marino）
 
 ■ やること
 1. 対象リストを作る
-   cd ~/dm-ops/talent-master-20260927
+   cd ~/dm-ops/talent-master-20260927-canonical
    python3 ~/dm-ops/tools/dm-ops/talent_queue.py --master . research-list --campaign all --include-sendable --limit 100
 2. out/research_targets_全案件_<今日>.csv の上から順に、1人ずつ次を確認する
    - アカウントの状態（存在／凍結／削除／鍵／見つからない）
@@ -47,7 +47,7 @@
 
 ---
 
-## 対象人数の目安（2026-09-27 版の台帳）
+## 対象人数の目安（旧 3,405行版での値。正本 4,700行版では未計測）
 
 | research-list | 人数 |
 |---|---:|

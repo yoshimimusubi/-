@@ -10,17 +10,19 @@
 ツールは「送ってよい相手を1日分だけ抜き出す」まで。X・YouTube には一切アクセスしない。
 送信は必ず人がプロフィールを確認してから手で行う。
 
-## 使うファイル（2026-09-27 統合版）
+## 使うファイル（2026-09-27 両端末統合正本）
 
-Drive: [タレント台帳・制作物フォルダ（他端末照合待ち）](https://drive.google.com/drive/folders/1GbQ_P7vcVtUOfkEh0xdGoiF6EF2jJZRz)
+Drive: [タレント台帳_統合正本_2026-09-27_両端末照合済み](https://drive.google.com/drive/folders/11EE9qCD4PLtYVTiHADLKCj_SOWsuRhnY)
+
+以前の「他端末照合待ち」フォルダ（3,405行版）は削除済み。数字も下の正本の値を使う。
 
 | ファイル | ツールでの役割 |
 |---|---|
-| `talent_master.csv`（3,405行） | 台帳。案件ごとの状態・適合・禁止・notes をここで判定 |
-| `contact_history.csv`（826行） | 接触履歴。同じ案件の送付済み・他案件接触・直近接触を判定 |
-| `needs_review.csv`（1,393件） | 要確認。載っている人は保留 |
+| `talent_master.csv`（4,700行） | 台帳。案件ごとの状態・適合・禁止・notes をここで判定 |
+| `contact_history.csv`（854行） | 接触履歴。同じ案件の送付済み・他案件接触・直近接触を判定 |
+| `needs_review.csv`（3,871件／1,545 ID） | 要確認。載っている人は保留 |
 | `identity_aliases.csv` | 同じ人の別ハンドル・別URL。旧ハンドルで送った履歴も拾う |
-| `talent_master.xlsx` / `field_provenance.csv` / `source_inventory.csv` / `summary.md` / `mac_mini_merge_notes.md` | 閲覧・根拠確認用（ツールは読まない） |
+| `talent_master.xlsx` / `field_provenance.csv` / `source_inventory.csv` / `research_queue.csv` / `public_research_log.csv` / `summary.md` / `mac_mini_merge_notes.md` | 閲覧・根拠確認用（ツールは読まない） |
 
 「送付不明・再送禁止」「両案件送付済み」は別ファイルではなく、台帳の `do_not_contact`・`igg_status`・`content_print_status` 列で判定する。
 
@@ -45,17 +47,13 @@ notes（書いてあったら保留）:
 
 並び順は notes の `IGG元リスト優先度=A` → `B` → その他。
 
-## 2026-09-27 版での試算（送信禁止版で確認済み）
+## 送付可人数
 
-| | IGGゲームイベント | コンテンツプリント |
-|---|---:|---:|
-| summary.md の条件適合在庫 | 610 | 188 |
-| notes「送信不可（オプトイン未記録）」「要再確認」などで保留 | −282 | −167 |
-| 要確認で保留 | −13 | −3 |
-| **送付可** | **315名** | **18名** |
-| 1日20件なら | 約16日分 | 1日分 |
+正本（4,700行版）ではまだツールを通していない。Mac mini の監査（[MAC_MINI_CODEX_AUDIT.md](MAC_MINI_CODEX_AUDIT.md) の F）の
+`tool_check.txt` で確定させる。summary.md の条件適合・未接触在庫は IGG 710 / コンテンツプリント 196
+（他案件接触も除外すると 691 / 192）だが、notes・要確認による保留を引く前の数字で、送付可人数ではない。
 
-保留の多くはリサーチで解消できる（下の「リサーチで送付可を増やす」）。
+> 旧版（3,405行）での試算「IGG 315名 / プリント 18名」は台帳が変わったため無効。
 
 ## リサーチで送付可を増やす
 
@@ -77,7 +75,7 @@ python3 ../tools/dm-ops/talent_queue.py --master . research-list --campaign all 
 
 結果は作業フォルダの `research_results.csv` に1人1行で追記する。queue は次回から自動でこれを読み、
 台帳の値（活動状況・個人か・日本語活動・DM開放・数値）をリサーチ結果で上書きして判定する。
-30日より古いリサーチは使わない。対象人数の目安: 両案件で約1,750名（100名/回で約18回）。
+30日より古いリサーチは使わない。対象人数は正本（4,700行版）では未計測（旧版では両案件で約1,750名）。
 
 キューの `channel` 列:
 - `DM` … 送信元アカウントからDM
@@ -90,8 +88,8 @@ python3 ../tools/dm-ops/talent_queue.py --master . research-list --campaign all 
 
 ```bash
 cd ~/dm-ops
-git clone -b claude/talent-list-execution-9q6tav https://github.com/yoshimimusubi/-.git tools   # 2回目以降は cd tools && git pull
-mkdir -p talent-master-20260927 && cd talent-master-20260927
+git clone -b claude/codex-chat-task-handoff-ntokd5 https://github.com/yoshimimusubi/-.git tools   # 2回目以降は cd tools && git pull
+mkdir -p talent-master-20260927-canonical && cd talent-master-20260927-canonical
 #   ↑ Drive フォルダの talent_master.csv / contact_history.csv / needs_review.csv / identity_aliases.csv をここに置く
 cp ../tools/dm-ops/config.example.json config.json
 python3 ../tools/dm-ops/talent_queue.py --master . inspect
@@ -142,9 +140,10 @@ python3 ../tools/dm-ops/talent_queue.py --master . queue --campaign プリント
 
 ## Mac mini との照合
 
-Mac mini 側の成果物（台帳・接触履歴・7/11以降の送信ログ）はまだ届いていない。
-統合版の「未接触」は、Mac mini のログと照合するまで「重複なし」の保証にならない。
-Codex への依頼文は [MAC_MINI_CODEX_HANDOFF.md](MAC_MINI_CODEX_HANDOFF.md)。
+台帳・接触履歴の両端末統合は 2026-09-27 に完了（正本フォルダ）。ただし 7/11 より新しい送信ログは両端末とも見つかっておらず、
+Mac mini には定期送信の設定が残っている（mac_mini_merge_notes.md「定期送信は変更していない」）。
+送信実績の確定は Codex の監査で行う: [MAC_MINI_CODEX_AUDIT.md](MAC_MINI_CODEX_AUDIT.md)。
+それまでは「未接触」を「重複なし」の保証として扱わない。
 
 Mac mini の送信ログが届いたら:
 - 新しい統合版（talent_master / contact_history）が来た場合 → 新しいフォルダに置いて inspect からやり直す
