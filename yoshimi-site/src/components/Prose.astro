@@ -1,0 +1,94 @@
+---
+import type { FieldAnnotation, PortableTextBlock } from "emdash";
+import { PortableText } from "emdash/ui";
+
+interface Props {
+	value: PortableTextBlock[] | null | undefined;
+	/** Visual-editing attributes from `entry.edit.<field>`. */
+	edit?: Partial<FieldAnnotation>;
+}
+
+const { value, edit = {} } = Astro.props;
+---
+
+{
+	value && value.length > 0 && (
+		<div class="prose" {...edit}>
+			<PortableText value={value} />
+		</div>
+	)
+}
+
+<style>
+	.prose {
+		max-width: 40em;
+		font-size: 16.5px;
+		line-height: 1.95;
+		color: var(--color-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.prose > :global(* + *) {
+		margin-block-start: 1.1em;
+	}
+
+	.prose :global(:is(h2, h3, h4)) {
+		font-family: var(--font-display);
+		font-weight: var(--font-weight-display);
+		line-height: var(--leading-snug);
+		color: var(--color-text);
+		text-wrap: balance;
+	}
+
+	.prose :global(h2) {
+		margin-block-start: 1.8em;
+		font-size: 26px;
+	}
+
+	.prose :global(:is(h3, h4)) {
+		margin-block-start: 1.5em;
+		font-size: 21px;
+	}
+
+	.prose :global(:is(ul, ol)) {
+		padding-inline-start: 1.4em;
+	}
+
+	.prose :global(ul) {
+		list-style: disc;
+	}
+
+	.prose :global(ol) {
+		list-style: decimal;
+	}
+
+	.prose :global(li::marker) {
+		color: var(--color-muted);
+	}
+
+	.prose :global(li + li) {
+		margin-block-start: 0.4em;
+	}
+
+	.prose :global(a) {
+		color: var(--color-brand);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.prose :global(strong) {
+		font-weight: 700;
+		color: var(--color-text);
+	}
+
+	.prose :global(blockquote) {
+		padding-inline-start: 20px;
+		border-inline-start: 2px solid var(--color-border-strong);
+	}
+
+	.prose :global(img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: var(--radius-media);
+	}
+</style>

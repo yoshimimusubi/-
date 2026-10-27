@@ -1,0 +1,96 @@
+---
+import type { ContentEntry, TaxonomyTerm } from "emdash";
+import type { News } from "../../emdash-env";
+import { formatDate, newsPath } from "../utils/news";
+
+interface Props {
+	items: { entry: ContentEntry<News>; categories: TaxonomyTerm[] }[];
+	headingLevel?: "h2" | "h3";
+}
+
+const { items, headingLevel = "h3" } = Astro.props;
+const Heading = headingLevel;
+---
+
+<ul class="news-items" role="list">
+	{
+		items.map(({ entry, categories }) => (
+			<li class="card card--lift news-item">
+				<div class="news-item__meta">
+					<time datetime={entry.data.publishedAt?.toISOString()}>
+						{formatDate(entry.data.publishedAt)}
+					</time>
+					{categories.map((term) => (
+						<a href={`/news?category=${encodeURIComponent(term.slug)}`} class="news-item__category">
+							{term.label}
+						</a>
+					))}
+				</div>
+				<Heading class="news-item__title">
+					<a href={newsPath(entry.id)} class="news-item__link">
+						{entry.data.title}
+					</a>
+				</Heading>
+				{entry.data.excerpt && <p class="news-item__excerpt">{entry.data.excerpt}</p>}
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.news-items {
+		display: grid;
+		gap: 12px;
+	}
+
+	.news-item {
+		position: relative;
+		display: grid;
+		gap: 8px;
+		padding: 22px 26px;
+	}
+
+	.news-item__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 14px;
+		font-size: 13px;
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Category chips sit above the card-wide link so they stay clickable */
+	.news-item__category {
+		position: relative;
+		z-index: 1;
+		padding: 2px 10px;
+		border-radius: var(--radius-full);
+		background: var(--color-sunken);
+		color: var(--color-text-secondary);
+		font-size: 12px;
+	}
+
+	.news-item__category:hover {
+		color: var(--color-text);
+	}
+
+	.news-item__title {
+		font-size: 18px;
+		font-weight: 700;
+		line-height: 1.6;
+	}
+
+	.news-item__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.news-item__excerpt {
+		font-size: 14.5px;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+</style>

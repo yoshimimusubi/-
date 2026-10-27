@@ -1,0 +1,31 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "yoshimi-site",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2026-02-24",
+	"compatibility_flags": ["nodejs_compat"],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "yoshimi-site",
+		},
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "yoshimi-site-media",
+		},
+	],
+	// 本番の URL（パスキー・管理画面のログインに使う）。独自ドメインに切り替えるときはここと routes を変える。
+	// "vars": { "EMDASH_SITE_URL": "https://www.example.com" },
+	// "routes": [{ "pattern": "www.example.com", "custom_domain": true }],
+
+	// サンドボックス型プラグイン（プラグインを本体から隔離して動かす仕組み）は Workers 有料プラン（月 $5〜）が必要。
+	// 有料プランにしたら次の行のコメントを外す。無料プランのままでも公式プラグイン（フォームなど）は使える。
+	// "worker_loaders": [{ "binding": "LOADER" }],
+
+	// 予約投稿などの定期処理（1 分ごと）
+	"triggers": {
+		"crons": ["* * * * *"],
+	},
+}

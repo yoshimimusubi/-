@@ -1,0 +1,2143 @@
+<!doctype html>
+<html lang="ja" class="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ヨシミムスビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Old+Mincho:wght@500;700&amp;display=swap" />
+<style>
+:root {
+	--font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+	--font-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+/*
+  tokens.css -- the design tokens for this template. These are the
+  defaults; to customize the site, override any variable in
+  src/styles/theme.css rather than editing this file. Declarations in
+  theme.css are unlayered, so they always beat these @layer base
+  defaults -- no specificity tricks needed.
+
+  Colors use light-dark(): the first value applies in light mode, the
+  second in dark mode. Overriding a color with a plain value changes
+  both modes at once; use light-dark(<light>, <dark>) in an override to
+  keep them distinct.
+
+  The palette is warm off-white and ink. Ink is the brand: --color-brand
+  follows --color-text and fills the primary buttons. The amber
+  --color-accent is for small marks only, such as the featured
+  testimonial's quote mark. Large rounded panels ("sheets") give the
+  page its structure: the sunken features panel is lit by
+  --glow-daylight and the dark --color-night panels by --glow-dusk. Set
+  a glow to none for a flat panel.
+
+  --font-body (Inter) and --font-display (Instrument Serif, for
+  headlines) are defined by the font pipeline in astro.config.mjs, not
+  here. To swap a loaded webfont, edit its fonts entry there. To use a
+  system font, or a different face for card titles and small headings,
+  override --font-body / --font-heading in theme.css.
+*/
+
+@layer base {
+	:root {
+		color-scheme: light dark;
+
+		/* Colors */
+		--color-bg: light-dark(#fafaf9, #0f0e0d); /* page canvas */
+		--color-surface: light-dark(#ffffff, #181715); /* cards, secondary buttons, menus */
+		--color-sunken: light-dark(#f2f1ee, #1c1b19); /* features panel, icon tiles, toggles */
+		--color-text: light-dark(#141312, #f3f2ef);
+		--color-text-secondary: light-dark(#57534e, #b4afa8); /* leads, nav and footer links */
+		--color-muted: light-dark(#78716c, #8f8982); /* the muted half of a headline, meta text */
+		--color-border: light-dark(rgb(20 19 18 / 0.08), rgb(255 255 255 / 0.08)); /* card rings */
+		--color-border-strong: light-dark(rgb(20 19 18 / 0.16), rgb(255 255 255 / 0.16));
+		--color-brand: var(--color-text);
+		--color-brand-strong: color-mix(in srgb, var(--color-brand) 84%, var(--color-bg)); /* hover */
+		--color-brand-soft: var(--color-text-secondary);
+		--color-on-brand: light-dark(#fafaf9, #141312); /* text and icons on brand surfaces */
+		--color-brand-ring: color-mix(in srgb, var(--color-brand) 14%, transparent);
+		--color-accent: light-dark(#d97706, #fbbf24);
+		--color-accent-soft: color-mix(in srgb, var(--color-accent) 22%, transparent);
+		--color-success: #22c55e;
+		--color-warning: #f59e0b;
+		--color-danger: light-dark(#dc2626, #f87171);
+
+		/* Night panels: stats, a closing call to action, the highlighted plan */
+		--color-night: light-dark(#141312, #1c1b19);
+		--color-on-night: #f3f2ef;
+		--color-on-night-muted: rgb(243 242 239 / 0.64);
+
+		/* Frosted glass: the floating header and photo captions */
+		--glass-bg: light-dark(rgb(255 255 255 / 0.78), rgb(28 27 25 / 0.74));
+		--chip-bg: light-dark(rgb(250 250 249 / 0.78), rgb(24 23 21 / 0.72));
+		--chip-text: light-dark(#141312, #f3f2ef);
+
+		/* Glows, layered over a panel's background color */
+		--glow-daylight:
+			radial-gradient(
+				60% 70% at 100% 0%,
+				light-dark(rgb(255 205 150 / 0.5), rgb(255 170 90 / 0.08)),
+				transparent 70%
+			),
+			radial-gradient(
+				40% 50% at 0% 100%,
+				light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.02)),
+				transparent 70%
+			);
+		--glow-dusk:
+			radial-gradient(55% 90% at 88% 0%, rgb(255 166 87 / 0.24), transparent 65%),
+			radial-gradient(45% 70% at 0% 100%, rgb(140 160 255 / 0.1), transparent 70%);
+
+		/* Typography */
+		--font-heading: var(--font-body); /* h1-h6, card titles */
+		--font-weight-heading: 500;
+		--font-weight-display: 400; /* serif headlines, set in --font-display */
+		--font-size-display: clamp(54px, 8.4vw, 120px); /* hero headline */
+		--font-size-h2: clamp(38px, 4.4vw, 60px); /* section headlines */
+
+		/* Type scale */
+		--font-size-xs: 0.75rem;
+		--font-size-sm: 0.875rem;
+		--font-size-base: 1rem;
+		--font-size-lg: 1.125rem;
+		--font-size-xl: 1.25rem;
+		--font-size-2xl: 1.5rem;
+		--font-size-3xl: 2rem;
+		--font-size-4xl: 2.5rem;
+		--font-size-5xl: 3.5rem;
+		--font-size-6xl: 4.5rem;
+
+		/* Line heights */
+		--leading-tight: 0.95; /* hero headline */
+		--leading-snug: 1.04; /* section headlines */
+		--leading-normal: 1.6; /* body copy */
+		--leading-relaxed: 1.7; /* long-form */
+
+		/* Letter spacing */
+		--tracking-tight: -0.03em; /* hero headline */
+		--tracking-snug: -0.02em; /* serif headlines */
+
+		/* Spacing */
+		--spacing-xs: 0.25rem;
+		--spacing-sm: 0.5rem;
+		--spacing-md: 1rem;
+		--spacing-lg: 1.5rem;
+		--spacing-xl: 2rem;
+		--spacing-2xl: 3rem;
+		--spacing-3xl: 4rem;
+		--spacing-4xl: 6rem;
+		--spacing-5xl: 8rem;
+
+		/* Layout */
+		--max-width: 720px; /* reading column */
+		--wide-width: 1200px; /* content container */
+		--gutter: 24px; /* container edge on narrow screens */
+		--sheet-inset: clamp(8px, 1vw, 16px); /* viewport edge to sheet */
+		--sheet-max: 1680px;
+		--section-space: clamp(80px, 9vw, 128px); /* between two blocks */
+
+		/* Radius */
+		--radius-sm: 8px;
+		--radius: 12px; /* icon tiles */
+		--radius-lg: 18px;
+		--radius-xl: 22px; /* cards */
+		--radius-media: 28px; /* photos */
+		--radius-sheet: clamp(20px, 2.2vw, 32px);
+		--radius-full: 9999px; /* pills: buttons, chips, the header */
+
+		/* Motion */
+		--ease-out: cubic-bezier(0.2, 0, 0, 1);
+		--transition-fast: 150ms var(--ease-out);
+		--transition-base: 200ms var(--ease-out);
+		--transition-slow: 300ms var(--ease-out);
+
+		/* Shadows */
+		--shadow-card:
+			0 0 0 1px var(--color-border), 0 1px 2px light-dark(rgb(20 19 18 / 0.04), rgb(0 0 0 / 0.3)),
+			0 10px 28px -12px light-dark(rgb(20 19 18 / 0.12), rgb(0 0 0 / 0.5));
+		--shadow-card-hover:
+			0 0 0 1px var(--color-border-strong),
+			0 2px 4px light-dark(rgb(20 19 18 / 0.05), rgb(0 0 0 / 0.3)),
+			0 18px 40px -14px light-dark(rgb(20 19 18 / 0.2), rgb(0 0 0 / 0.6));
+		--shadow-glass:
+			inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.08)),
+			0 0 0 1px var(--color-border),
+			0 12px 32px -12px light-dark(rgb(20 19 18 / 0.18), rgb(0 0 0 / 0.6));
+		--shadow-sm: 0 1px 2px light-dark(rgb(20 19 18 / 0.05), rgb(0 0 0 / 0.3));
+		--shadow: var(--shadow-card);
+		--shadow-lg: var(--shadow-card-hover);
+		--shadow-xl:
+			0 0 0 1px var(--color-border),
+			0 24px 56px -16px light-dark(rgb(20 19 18 / 0.24), rgb(0 0 0 / 0.7));
+	}
+
+	@media (max-width: 640px) {
+		:root {
+			--radius-media: 22px;
+		}
+	}
+
+	/*
+	 * Light-mode values for browsers without light-dark() (Safari < 17.5,
+	 * Chrome < 123). Must mirror the light values above.
+	 */
+	@supports not (color: light-dark(#000, #fff)) {
+		:root {
+			color-scheme: light;
+			--color-bg: #fafaf9;
+			--color-surface: #ffffff;
+			--color-sunken: #f2f1ee;
+			--color-text: #141312;
+			--color-text-secondary: #57534e;
+			--color-muted: #78716c;
+			--color-border: rgb(20 19 18 / 0.08);
+			--color-border-strong: rgb(20 19 18 / 0.16);
+			--color-on-brand: #fafaf9;
+			--color-accent: #d97706;
+			--color-danger: #dc2626;
+			--color-night: #141312;
+			--glass-bg: rgb(255 255 255 / 0.78);
+			--chip-bg: rgb(250 250 249 / 0.78);
+			--chip-text: #141312;
+			--glow-daylight:
+				radial-gradient(60% 70% at 100% 0%, rgb(255 205 150 / 0.5), transparent 70%),
+				radial-gradient(40% 50% at 0% 100%, rgb(255 255 255 / 0.7), transparent 70%);
+			--shadow-card:
+				0 0 0 1px var(--color-border), 0 1px 2px rgb(20 19 18 / 0.04),
+				0 10px 28px -12px rgb(20 19 18 / 0.12);
+			--shadow-card-hover:
+				0 0 0 1px var(--color-border-strong), 0 2px 4px rgb(20 19 18 / 0.05),
+				0 18px 40px -14px rgb(20 19 18 / 0.2);
+			--shadow-glass:
+				inset 0 0 0 1px rgb(255 255 255 / 0.7), 0 0 0 1px var(--color-border),
+				0 12px 32px -12px rgb(20 19 18 / 0.18);
+			--shadow-sm: 0 1px 2px rgb(20 19 18 / 0.05);
+			--shadow-xl: 0 0 0 1px var(--color-border), 0 24px 56px -16px rgb(20 19 18 / 0.24);
+		}
+	}
+}
+
+/*
+  theme.css -- ヨシミムスビのテーマ。tokens.css の既定値をここで上書きする。
+  ここに書いた宣言は @layer の外にあるので、tokens.css より常に優先される。
+
+  色は light-dark(<ライト>, <ダーク>) で両モードを一度に指定する。
+
+  - --color-brand: ボタンの色。水引（みずひき）の紅をすこし落ち着かせた色
+  - --color-accent: 小さな印だけに使う差し色。りんごの葉の緑
+  - メンバーごとの色は CMS の「イメージカラー」で持ち、カードや個別ページで --talent-color として使う
+*/
+
+:root {
+	--color-bg: light-dark(#fbf8f5, #121010);
+	--color-surface: light-dark(#ffffff, #1b1817);
+	--color-sunken: light-dark(#f4eeea, #211d1c);
+	--color-text: light-dark(#2a2220, #f4efec);
+	--color-text-secondary: light-dark(#5d514d, #c4b8b3);
+	--color-muted: light-dark(#85776f, #9a8d87);
+
+	--color-brand: light-dark(#b23a48, #f08a96);
+	--color-on-brand: light-dark(#fffaf8, #2a1013);
+	--color-accent: light-dark(#4f8a3c, #8fcf74);
+
+	--color-night: light-dark(#2b1d20, #231b1c);
+
+	--glow-daylight:
+		radial-gradient(
+			60% 70% at 100% 0%,
+			light-dark(rgb(255 196 196 / 0.45), rgb(240 138 150 / 0.08)),
+			transparent 70%
+		),
+		radial-gradient(
+			40% 50% at 0% 100%,
+			light-dark(rgb(214 236 204 / 0.6), rgb(143 207 116 / 0.05)),
+			transparent 70%
+		);
+	--glow-dusk:
+		radial-gradient(55% 90% at 88% 0%, rgb(240 138 150 / 0.26), transparent 65%),
+		radial-gradient(45% 70% at 0% 100%, rgb(143 207 116 / 0.12), transparent 70%);
+
+	/* 和文の見出しは欧文より字面が大きいので、全体に一段小さく、行間を広めに */
+	--font-weight-display: 500;
+	--font-size-display: clamp(40px, 6.4vw, 84px);
+	--font-size-h2: clamp(30px, 3.6vw, 48px);
+	--leading-tight: 1.2;
+	--leading-snug: 1.3;
+	--leading-normal: 1.8;
+	--tracking-tight: 0.01em;
+	--tracking-snug: 0.02em;
+}
+
+@supports not (color: light-dark(#000, #fff)) {
+	:root {
+		--color-bg: #fbf8f5;
+		--color-surface: #ffffff;
+		--color-sunken: #f4eeea;
+		--color-text: #2a2220;
+		--color-text-secondary: #5d514d;
+		--color-muted: #85776f;
+		--color-brand: #b23a48;
+		--color-on-brand: #fffaf8;
+		--color-accent: #4f8a3c;
+		--color-night: #2b1d20;
+	}
+}
+
+/* 和文の改行。文節の途中で折り返さない（対応ブラウザのみ） */
+body {
+	line-break: strict;
+	overflow-wrap: anywhere;
+	font-feature-settings: "palt" 0;
+}
+
+:is(h1, h2, h3, .display, .section-headline, .lead, .section-subheadline) {
+	word-break: auto-phrase;
+}
+
+/* 和文の大見出しはやや詰めた字間より、すこし開いたほうが読みやすい */
+.section-headline,
+.display {
+	letter-spacing: var(--tracking-snug);
+}
+
+			/*
+			 * Establish layer order: "base" has lower priority than unlayered
+			 * styles, so theme.css overrides always win regardless of source
+			 * order in the bundled CSS.
+			 */
+			@layer base;
+
+			@layer base {
+				*,
+				*::before,
+				*::after {
+					box-sizing: border-box;
+					margin: 0;
+					padding: 0;
+				}
+
+				/*
+				 * Design tokens live in src/styles/tokens.css. Colors are
+				 * defined with light-dark(); these rules pin the scheme when
+				 * the footer switcher sets an explicit choice. With no class,
+				 * color-scheme: light dark follows the OS preference. The
+				 * @supports guard keeps the toggle from forcing dark UA form
+				 * controls on browsers stuck on the plain-light fallback.
+				 */
+				@supports (color: light-dark(#000, #fff)) {
+					:root.light {
+						color-scheme: light;
+					}
+
+					:root.dark {
+						color-scheme: dark;
+					}
+				}
+
+				html {
+					scroll-behavior: smooth;
+				}
+
+				@media (prefers-reduced-motion: reduce) {
+					html {
+						scroll-behavior: auto;
+					}
+
+					*,
+					*::before,
+					*::after {
+						scroll-behavior: auto !important;
+						transition-duration: 0.01ms !important;
+						animation-duration: 0.01ms !important;
+						animation-iteration-count: 1 !important;
+					}
+				}
+
+				body {
+					display: flex;
+					flex-direction: column;
+					min-height: 100vh;
+					font-family: var(--font-body);
+					font-size: var(--font-size-base);
+					font-feature-settings: "cv11", "ss01";
+					line-height: var(--leading-normal);
+					color: var(--color-text);
+					background: var(--color-bg);
+					-webkit-font-smoothing: antialiased;
+					-moz-osx-font-smoothing: grayscale;
+				}
+
+				main {
+					flex: 1;
+				}
+
+				main:focus {
+					outline: none;
+				}
+
+				a:where(:not([class*="emdash"]):not([class*="ec-"])) {
+					color: currentColor;
+					text-decoration: none;
+				}
+
+				/* Bare links in authored content need a visible style; component
+				   links restyle themselves via classes. */
+				p a:not([class]),
+				li a:not([class]) {
+					color: var(--color-brand);
+					text-decoration: underline;
+					text-underline-offset: 2px;
+				}
+
+				:where(:not([class*="emdash"]):not([class*="ec-"])):focus-visible {
+					outline: 2px solid var(--color-text);
+					outline-offset: 2px;
+				}
+
+				/* Light buttons sit on dark panels and photos, so their ring is light too */
+				:where(.sheet--night) :focus-visible,
+				.btn-light:focus-visible,
+				.btn-glass:focus-visible {
+					outline-color: var(--color-on-night);
+				}
+
+				img {
+					max-width: 100%;
+					height: auto;
+					display: block;
+				}
+
+				ul {
+					list-style: none;
+				}
+
+				h1,
+				h2,
+				h3,
+				h4,
+				h5,
+				h6 {
+					font-family: var(--font-heading);
+					font-weight: var(--font-weight-heading);
+					line-height: 1.3;
+					letter-spacing: -0.01em;
+					text-wrap: balance;
+				}
+
+				h1 {
+					font-size: var(--font-size-5xl);
+				}
+				h2 {
+					font-size: var(--font-size-3xl);
+				}
+				h3 {
+					font-size: var(--font-size-2xl);
+				}
+				h4 {
+					font-size: var(--font-size-xl);
+				}
+
+				.skip-link {
+					position: fixed;
+					inset-block-start: 12px;
+					inset-inline-start: 12px;
+					z-index: 100;
+					padding: 10px 18px;
+					border-radius: var(--radius-full);
+					background: var(--color-brand);
+					color: var(--color-on-brand);
+					font-size: 14px;
+					font-weight: 500;
+					translate: 0 calc(-100% - 24px);
+					transition: translate var(--transition-fast);
+				}
+
+				.skip-link:focus {
+					translate: 0 0;
+				}
+
+				/* Layout */
+
+				.container {
+					width: min(100% - var(--gutter) * 2, var(--wide-width));
+					margin-inline: auto;
+				}
+
+				/*
+				 * Blocks can come in any order, so every gap is the same: a plain
+				 * section pads half of --section-space and a sheet keeps half of
+				 * it as margin, putting any two neighbours one space apart.
+				 */
+				.section {
+					padding-block: calc(var(--section-space) / 2);
+				}
+
+				.sheet-section {
+					margin-block: calc(var(--section-space) / 2);
+				}
+
+				.sheet-body {
+					padding-block: var(--section-space);
+				}
+
+				/* A flex column, so the margins of two neighbouring sheets add up instead of collapsing */
+				.page-blocks {
+					display: flex;
+					flex-direction: column;
+				}
+
+				/* Anchor targets land below the floating header */
+				section[id],
+				main {
+					scroll-margin-top: 88px;
+				}
+
+				.media {
+					position: relative;
+					isolation: isolate;
+					overflow: hidden;
+					border-radius: var(--radius-media);
+				}
+
+				.media::after {
+					content: "";
+					position: absolute;
+					inset: 0;
+					border-radius: inherit;
+					box-shadow: inset 0 0 0 1px light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1));
+					pointer-events: none;
+				}
+
+				.media__img {
+					display: block;
+				}
+
+				/* After .media, so a photo sheet keeps the sheet radius */
+				.sheet {
+					position: relative;
+					isolation: isolate;
+					width: min(100% - var(--sheet-inset) * 2, var(--sheet-max));
+					margin-inline: auto;
+					border-radius: var(--radius-sheet);
+					overflow: hidden;
+				}
+
+				.sheet--sunken {
+					background: var(--glow-daylight), var(--color-sunken);
+				}
+
+				.sheet--night {
+					color: var(--color-on-night);
+					background: var(--glow-dusk), var(--color-night);
+					box-shadow: inset 0 0 0 1px light-dark(transparent, var(--color-border));
+				}
+
+				/* Type */
+
+				.section-header {
+					max-width: 780px;
+					margin-bottom: clamp(40px, 5vw, 64px);
+				}
+
+				.section-header--center {
+					margin-inline: auto;
+					text-align: center;
+				}
+
+				.section-headline {
+					font-family: var(--font-display);
+					font-size: var(--font-size-h2);
+					font-weight: var(--font-weight-display);
+					line-height: var(--leading-snug);
+					letter-spacing: var(--tracking-snug);
+					text-wrap: balance;
+					overflow-wrap: break-word;
+				}
+
+				.section-headline__muted {
+					color: var(--color-muted);
+				}
+
+				.section-subheadline {
+					margin-top: 20px;
+					font-size: 18px;
+					line-height: 1.55;
+					color: var(--color-text-secondary);
+					text-wrap: pretty;
+				}
+
+				.eyebrow {
+					display: inline-block;
+					font-family: var(--font-body);
+					font-size: 13px;
+					font-weight: 500;
+					line-height: 1.4;
+					letter-spacing: normal;
+					color: var(--color-text-secondary);
+				}
+
+				.eyebrow + :is(h1, h2, h3) {
+					margin-top: 18px;
+				}
+
+				.display {
+					font-family: var(--font-display);
+					font-weight: var(--font-weight-display);
+					line-height: var(--leading-snug);
+					letter-spacing: var(--tracking-snug);
+					text-wrap: balance;
+					overflow-wrap: break-word;
+				}
+
+				.lead {
+					font-size: 19px;
+					line-height: 1.55;
+					color: var(--color-text-secondary);
+					text-wrap: pretty;
+				}
+
+				.sheet--night
+					:is(.eyebrow, .lead, .section-subheadline, .section-headline__muted) {
+					color: var(--color-on-night-muted);
+				}
+
+				/* Buttons and links */
+
+				.btn,
+				.btn-primary {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					gap: 8px;
+					min-height: 44px;
+					padding: 10px 20px;
+					border: 0;
+					border-radius: var(--radius-full);
+					background: var(--color-brand);
+					color: var(--color-on-brand);
+					font-family: inherit;
+					font-size: 15px;
+					font-weight: 500;
+					line-height: 1.2;
+					text-align: center;
+					text-decoration: none;
+					cursor: pointer;
+					transition:
+						background-color var(--transition-fast),
+						box-shadow var(--transition-fast),
+						scale var(--transition-fast);
+				}
+
+				.btn:hover,
+				.btn-primary:hover {
+					background: var(--color-brand-strong);
+				}
+
+				.btn:active,
+				.btn-primary:active {
+					scale: 0.96;
+				}
+
+				.btn-secondary {
+					background: var(--color-surface);
+					color: var(--color-text);
+					box-shadow: var(--shadow-card);
+				}
+
+				.btn-secondary:hover {
+					background: var(--color-surface);
+					box-shadow: var(--shadow-card-hover);
+				}
+
+				.btn-light {
+					background: #fafaf9;
+					color: #141312;
+				}
+
+				.btn-light:hover {
+					background: #ffffff;
+				}
+
+				.btn-glass {
+					background: rgb(255 255 255 / 0.12);
+					color: #ffffff;
+					box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+					-webkit-backdrop-filter: blur(12px);
+					backdrop-filter: blur(12px);
+				}
+
+				.btn-glass:hover {
+					background: rgb(255 255 255 / 0.2);
+				}
+
+				.btn-sm {
+					min-height: 40px;
+					padding-inline: 16px;
+					font-size: 14px;
+				}
+
+				.btn-lg {
+					min-height: 50px;
+					padding-inline: 24px;
+					font-size: 15.5px;
+				}
+
+				.actions {
+					display: flex;
+					flex-wrap: wrap;
+					gap: 10px;
+				}
+
+				.text-link {
+					display: inline-flex;
+					align-items: center;
+					gap: 6px;
+					font-size: 15px;
+					font-weight: 500;
+				}
+
+				.arrow {
+					flex: none;
+					transition: translate var(--transition-base);
+				}
+
+				:is(.btn, .text-link) .arrow {
+					font-size: 15px;
+				}
+
+				:is(.btn, .text-link):hover .arrow {
+					translate: 2px 0;
+				}
+
+				:dir(rtl) .arrow {
+					scale: -1 1;
+				}
+
+				:dir(rtl) :is(.btn, .text-link):hover .arrow {
+					translate: -2px 0;
+				}
+
+				/* Surfaces */
+
+				.card {
+					background: var(--color-surface);
+					color: var(--color-text);
+					border-radius: var(--radius-xl);
+					box-shadow: var(--shadow-card);
+					transition:
+						box-shadow var(--transition-base),
+						translate var(--transition-base);
+				}
+
+				.card--lift:hover {
+					box-shadow: var(--shadow-card-hover);
+					translate: 0 -2px;
+				}
+
+				.icon-tile {
+					display: grid;
+					place-items: center;
+					flex: none;
+					width: 44px;
+					height: 44px;
+					border-radius: var(--radius);
+					background: var(--color-sunken);
+					color: var(--color-text);
+					font-size: 21px;
+				}
+
+				.media-chip {
+					position: absolute;
+					inset-block-end: clamp(12px, 1.6vw, 24px);
+					inset-inline-start: clamp(12px, 1.6vw, 24px);
+					z-index: 1;
+					display: inline-flex;
+					align-items: center;
+					max-width: calc(100% - 2 * clamp(12px, 1.6vw, 24px));
+					min-height: 40px;
+					padding-block: 9px;
+					padding-inline: 16px;
+					border-radius: var(--radius-full);
+					background: var(--chip-bg);
+					color: var(--chip-text);
+					font-size: 13.5px;
+					font-weight: 500;
+					line-height: 1.3;
+					box-shadow:
+						inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.1)),
+						0 10px 30px -10px light-dark(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.5));
+					-webkit-backdrop-filter: blur(16px) saturate(1.5);
+					backdrop-filter: blur(16px) saturate(1.5);
+				}
+
+				.tick {
+					display: grid;
+					place-items: center;
+					flex: none;
+					width: 22px;
+					height: 22px;
+					margin-top: 1px;
+					border-radius: 50%;
+					background: var(--color-sunken);
+					color: var(--color-text);
+					font-size: 12px;
+				}
+
+				.sheet--night .tick {
+					background: rgb(255 255 255 / 0.12);
+					color: var(--color-on-night);
+				}
+
+				.avatar {
+					display: grid;
+					place-items: center;
+					flex: none;
+					width: 44px;
+					height: 44px;
+					border-radius: 50%;
+					background: var(--color-sunken);
+					box-shadow: inset 0 0 0 1px var(--color-border);
+					color: var(--color-text-secondary);
+					font-size: 13.5px;
+					font-weight: 500;
+					letter-spacing: 0.02em;
+				}
+
+				.empty-state {
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					gap: 20px;
+					max-width: 640px;
+					padding-block: var(--section-space);
+					text-align: center;
+				}
+
+				.empty-state__title {
+					font-size: var(--font-size-h2);
+					line-height: var(--leading-snug);
+				}
+
+				.empty-state .actions {
+					justify-content: center;
+					margin-top: 12px;
+				}
+
+				@media (max-width: 640px) {
+					.media-chip {
+						border-radius: 16px;
+						font-size: 12.5px;
+					}
+				}
+
+				/* Motion */
+
+				@media (prefers-reduced-motion: no-preference) {
+					.rise {
+						animation: rise-in 900ms var(--ease-out) both;
+						animation-delay: calc(var(--rise-index, 0) * 90ms);
+					}
+
+					@supports (animation-timeline: view()) {
+						.settle img {
+							animation: media-settle linear both;
+							animation-timeline: view();
+							animation-range: entry 0% cover 45%;
+						}
+					}
+				}
+
+				@keyframes rise-in {
+					from {
+						opacity: 0;
+						translate: 0 14px;
+						filter: blur(6px);
+					}
+				}
+
+
+				@keyframes media-settle {
+					from {
+						scale: 1.12;
+					}
+
+					to {
+						scale: 1;
+					}
+				}
+			}
+
+			/*
+			 * Outside the layer, and more specific than EmDash's unlayered
+			 * ".emdash-image-media { max-width: 100%; height: auto }", so a photo
+			 * fills its frame whichever way <Image> renders it. No display here:
+			 * EmDash hides the inactive light or dark variant with display: none.
+			 */
+			.media__img,
+			.media__img img,
+			.media__img img.emdash-image-media,
+			img.media__img.emdash-image-media {
+				width: 100%;
+				height: 100%;
+				max-width: none;
+				max-height: none;
+				object-fit: cover;
+			}
+		
+
+			.site-header {
+				position: sticky;
+				top: 0;
+				z-index: 50;
+				padding-block-start: 12px;
+				padding-inline: var(--sheet-inset);
+				pointer-events: none;
+			}
+
+			.nav {
+				position: relative;
+				display: flex;
+				align-items: center;
+				gap: 36px;
+				width: min(100%, var(--wide-width) + 40px);
+				height: 60px;
+				margin-inline: auto;
+				padding-inline: 24px 10px;
+				border-radius: var(--radius-full);
+				background: var(--glass-bg);
+				box-shadow: var(--shadow-glass);
+				-webkit-backdrop-filter: saturate(1.6) blur(18px);
+				backdrop-filter: saturate(1.6) blur(18px);
+				pointer-events: auto;
+			}
+
+			.nav__logo {
+				min-width: 0;
+				overflow: hidden;
+				font-family: var(--font-display);
+				font-size: 22px;
+				font-weight: 700;
+				line-height: 1.2;
+				letter-spacing: 0.06em;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.nav__logo-img {
+				width: auto;
+				height: 32px;
+				max-width: 180px;
+				object-fit: contain;
+			}
+
+			.nav__links {
+				display: flex;
+				gap: 28px;
+				font-size: 14.5px;
+				color: var(--color-text-secondary);
+			}
+
+			.nav__links a {
+				white-space: nowrap;
+				transition: color var(--transition-fast);
+			}
+
+			.nav__links a:hover {
+				color: var(--color-text);
+			}
+
+			.nav__actions {
+				display: flex;
+				flex: none;
+				align-items: center;
+				gap: 6px;
+				margin-inline-start: auto;
+			}
+
+			.nav__admin {
+				padding-inline: 10px;
+				font-size: 14px;
+				color: var(--color-muted);
+				transition: color var(--transition-fast);
+			}
+
+			.nav__admin:hover {
+				color: var(--color-text);
+			}
+
+			.nav__cta {
+				white-space: nowrap;
+			}
+
+			.nav__menu-btn {
+				display: none;
+				place-items: center;
+				width: 40px;
+				height: 40px;
+				padding: 0;
+				border: 0;
+				border-radius: 50%;
+				background: none;
+				color: inherit;
+				font-size: 20px;
+				cursor: pointer;
+				transition: background-color var(--transition-fast);
+			}
+
+			.nav__menu-btn:hover,
+			.nav__menu-btn[aria-expanded="true"] {
+				background: var(--color-sunken);
+			}
+
+			.nav__menu-btn[aria-expanded="true"] .nav__menu-open,
+			.nav__menu-btn[aria-expanded="false"] .nav__menu-close {
+				display: none;
+			}
+
+			.nav__panel {
+				position: absolute;
+				inset-block-start: calc(100% + 8px);
+				inset-inline: 0;
+				display: none;
+				max-height: calc(100dvh - 96px);
+				overflow-y: auto;
+				padding: 8px;
+				border-radius: 26px;
+				background: var(--color-surface);
+				box-shadow: var(--shadow-glass);
+			}
+
+			.nav__panel a {
+				display: flex;
+				align-items: center;
+				min-height: 48px;
+				padding-inline: 18px;
+				border-radius: 18px;
+				font-size: 16px;
+				transition: background-color var(--transition-fast);
+			}
+
+			.nav__panel a:hover {
+				background: var(--color-sunken);
+			}
+
+			.nav__panel .nav__panel-admin {
+				color: var(--color-muted);
+			}
+
+			.site-footer {
+				overflow: hidden;
+				padding-top: calc(var(--section-space) / 2);
+			}
+
+			.footer__grid {
+				display: grid;
+				grid-template-columns: minmax(0, 1.5fr);
+				grid-auto-columns: minmax(0, 1fr);
+				grid-auto-flow: column;
+				gap: 48px;
+			}
+
+			.footer__logo {
+				display: inline-block;
+				font-family: var(--font-display);
+				font-size: 22px;
+				font-weight: 700;
+				line-height: 1;
+				letter-spacing: 0.06em;
+			}
+
+			.footer__logo-img {
+				width: auto;
+				height: 32px;
+				max-width: 180px;
+				object-fit: contain;
+			}
+
+			.footer__tagline {
+				max-width: 18em;
+				margin-top: 14px;
+				font-size: 14.5px;
+				color: var(--color-muted);
+			}
+
+			.footer__heading {
+				margin-bottom: 16px;
+				font-size: 13px;
+				font-weight: 500;
+				line-height: 1.4;
+				letter-spacing: normal;
+				color: var(--color-muted);
+			}
+
+			.footer__links {
+				display: grid;
+				gap: 10px;
+			}
+
+			.footer__link {
+				font-size: 14.5px;
+				color: var(--color-text-secondary);
+				overflow-wrap: anywhere;
+				transition: color var(--transition-fast);
+			}
+
+			.footer__link:hover {
+				color: var(--color-text);
+			}
+
+			.footer__legal {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: space-between;
+				gap: 16px;
+				margin-top: 72px;
+				font-size: 13.5px;
+				color: var(--color-muted);
+			}
+
+			.footer__powered a {
+				color: var(--color-text);
+				text-decoration: underline;
+				text-decoration-color: var(--color-border-strong);
+				text-underline-offset: 3px;
+				transition: text-decoration-color var(--transition-fast);
+			}
+
+			.footer__powered a:hover {
+				text-decoration-color: currentColor;
+			}
+
+			.theme-switcher {
+				display: inline-flex;
+				padding: 3px;
+				border-radius: var(--radius-full);
+				background: var(--color-sunken);
+			}
+
+			.theme-btn {
+				height: 28px;
+				padding-block: 0;
+				padding-inline: 12px;
+				border: 0;
+				border-radius: var(--radius-full);
+				background: transparent;
+				color: var(--color-text-secondary);
+				font-family: inherit;
+				font-size: 12.5px;
+				cursor: pointer;
+				transition:
+					background-color var(--transition-fast),
+					color var(--transition-fast),
+					box-shadow var(--transition-fast);
+			}
+
+			.theme-btn:hover {
+				color: var(--color-text);
+			}
+
+			.theme-btn[aria-pressed="true"] {
+				background: var(--color-surface);
+				color: var(--color-text);
+				box-shadow: var(--shadow-card);
+			}
+
+			.footer__wordmark {
+				margin-top: 40px;
+				margin-bottom: -0.2em;
+				font-family: var(--font-display);
+				/* 和文は 1 文字がほぼ 1em。92vw / 文字数 で、長い社名でもページ幅に収める */
+				font-size: min(clamp(56px, 15vw, 240px), 92vw / var(--wordmark-length, 6));
+				font-weight: 700;
+				line-height: 1;
+				letter-spacing: 0;
+				text-align: center;
+				white-space: nowrap;
+				color: transparent;
+				background: linear-gradient(
+					180deg,
+					color-mix(in srgb, var(--color-text) 9%, transparent),
+					color-mix(in srgb, var(--color-text) 2%, transparent) 75%
+				);
+				-webkit-background-clip: text;
+				background-clip: text;
+				-webkit-user-select: none;
+				user-select: none;
+				pointer-events: none;
+			}
+
+			@media (max-width: 960px) {
+				.nav {
+					gap: 16px;
+					padding-inline-start: 20px;
+				}
+
+				.nav__links,
+				.nav__admin,
+				.nav__cta ~ .nav__cta {
+					display: none;
+				}
+
+				.nav__menu-btn {
+					display: grid;
+				}
+
+				.nav__panel:not([hidden]) {
+					display: grid;
+				}
+
+				.footer__grid {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					grid-auto-flow: row;
+					gap: 40px 24px;
+				}
+
+				.footer__brand {
+					grid-column: 1 / -1;
+				}
+			}
+
+			@media (forced-colors: active) {
+				.theme-btn[aria-pressed="true"] {
+					outline: 1px solid CanvasText;
+				}
+
+				.footer__wordmark {
+					display: none;
+				}
+			}
+		
+
+	.hero {
+		padding-block-start: clamp(56px, 7vw, 104px);
+	}
+
+	.hero__announce {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 34px;
+		padding-block: 6px;
+		padding-inline: 14px;
+		border-radius: 17px;
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+		font-size: 13.5px;
+		line-height: 1.35;
+		color: var(--color-text-secondary);
+		transition: box-shadow 160ms var(--ease-out);
+	}
+
+	.hero__announce .arrow {
+		flex: none;
+		color: var(--color-muted);
+	}
+
+	a.hero__announce:hover {
+		box-shadow: var(--shadow-card-hover);
+	}
+
+	.hero__headline {
+		--rise-index: 1;
+		max-width: 12em;
+		font-size: var(--font-size-display);
+		line-height: var(--leading-tight);
+		letter-spacing: var(--tracking-tight);
+	}
+
+	.hero__announce + .hero__headline {
+		margin-block-start: 28px;
+	}
+
+	.hero__row {
+		--rise-index: 2;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: 32px;
+		margin-block-start: 36px;
+	}
+
+	.hero__lead {
+		max-width: 34em;
+	}
+
+	.hero__media {
+		margin-block-start: clamp(48px, 5vw, 72px);
+		aspect-ratio: 21 / 9;
+		border-radius: var(--radius-sheet);
+	}
+
+	.hero--centered .container {
+		text-align: center;
+	}
+
+	.hero--centered .hero__headline {
+		max-width: 14em;
+		margin-inline: auto;
+		font-size: clamp(36px, 5vw, 64px);
+	}
+
+	.hero--centered .hero__row {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+	}
+
+	.hero--centered .actions {
+		justify-content: center;
+	}
+
+	@media (max-width: 960px) {
+		.hero__row {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.hero__media {
+			aspect-ratio: 1;
+		}
+	}
+
+
+	.features {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 16px;
+		list-style: none;
+	}
+
+	.feature {
+		padding: 28px 28px 32px;
+	}
+
+	.feature__title {
+		margin-block-start: 28px;
+		font-size: 16px;
+		line-height: 1.4;
+		letter-spacing: -0.005em;
+	}
+
+	.feature__description {
+		margin-block-start: 8px;
+		font-size: 15px;
+		line-height: 1.6;
+		color: var(--color-muted);
+		text-wrap: pretty;
+	}
+
+	@media (max-width: 960px) {
+		.features {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 640px) {
+		.features {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.feature {
+			padding: 24px;
+		}
+
+		.feature__title {
+			margin-block-start: 20px;
+		}
+	}
+
+
+	.split__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(48px, 7vw, 112px);
+		align-items: center;
+	}
+
+	.split--text-only .split__grid {
+		grid-template-columns: minmax(0, 780px);
+	}
+
+	.eyebrow + .split__headline {
+		margin-block-start: 18px;
+	}
+
+	.split__body {
+		max-width: 32em;
+		margin-block-start: 20px;
+		font-size: 17px;
+		color: var(--color-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.split__points {
+		display: grid;
+		gap: 14px;
+		margin-block-start: 28px;
+		list-style: none;
+	}
+
+	.split__points li {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		font-size: 15.5px;
+		color: var(--color-text-secondary);
+	}
+
+	.split__link {
+		margin-block-start: 32px;
+	}
+
+	.split__media {
+		aspect-ratio: 4 / 5;
+	}
+
+	.split--image-first .split__media {
+		order: -1;
+	}
+
+	@media (max-width: 960px) {
+		.split__grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.split--image-first .split__media {
+			order: 0;
+		}
+	}
+
+
+	.faq {
+		display: grid;
+		align-items: start;
+		gap: clamp(40px, 8vw, 112px);
+	}
+
+	.faq--with-intro {
+		grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+	}
+
+	.faq__intro {
+		position: sticky;
+		inset-block-start: 104px;
+	}
+
+	.faq__subheadline {
+		max-width: 18em;
+		color: var(--color-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.section-headline + .faq__subheadline {
+		margin-block-start: 20px;
+	}
+
+	.faq__list {
+		display: grid;
+		gap: 10px;
+	}
+
+	.faq__item {
+		border-radius: var(--radius-lg);
+	}
+
+	.faq__item[open] {
+		box-shadow: var(--shadow-card-hover);
+	}
+
+	.faq__question {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding-block: 18px;
+		padding-inline: 24px 18px;
+		border-radius: inherit;
+		font-size: 16.5px;
+		font-weight: 500;
+		list-style: none;
+		cursor: pointer;
+	}
+
+	.faq__question::-webkit-details-marker {
+		display: none;
+	}
+
+	.faq__icon {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background: var(--color-sunken);
+		color: var(--color-text-secondary);
+		font-size: 15px;
+	}
+
+	.faq__item[open] .faq__icon {
+		rotate: 45deg;
+	}
+
+	.faq__answer {
+		max-width: 40em;
+		padding-inline: 24px;
+		padding-block-end: 24px;
+		color: var(--color-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.faq__answer p + p {
+		margin-block-start: 12px;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.faq__icon {
+			transition: rotate 220ms var(--ease-out);
+		}
+	}
+
+	@media (max-width: 960px) {
+		.faq--with-intro {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.faq__intro {
+			position: static;
+		}
+	}
+
+
+	.cta {
+		display: grid;
+		align-items: center;
+		min-height: clamp(480px, 42vw, 640px);
+	}
+
+	.cta--photo {
+		color: #fff;
+		background-color: var(--color-night);
+	}
+
+	.cta--photo::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: linear-gradient(
+			to right,
+			rgb(15 14 13 / 0.86),
+			rgb(15 14 13 / 0.6) 40%,
+			rgb(15 14 13 / 0.08) 80%
+		);
+	}
+
+	.cta--photo:dir(rtl)::before {
+		background: linear-gradient(
+			to left,
+			rgb(15 14 13 / 0.86),
+			rgb(15 14 13 / 0.6) 40%,
+			rgb(15 14 13 / 0.08) 80%
+		);
+	}
+
+	.cta__bg {
+		position: absolute;
+		inset: 0;
+		z-index: -2;
+	}
+
+	.cta__bg img {
+		width: 100%;
+		max-width: none;
+		height: 100%;
+		max-height: none;
+		object-fit: cover;
+	}
+
+	.cta__content {
+		padding-block: 72px;
+	}
+
+	.cta__headline {
+		max-width: 14em;
+		font-size: clamp(32px, 4vw, 56px);
+		line-height: 1.3;
+	}
+
+	.cta__body {
+		max-width: 30em;
+		margin-block-start: 20px;
+		font-size: 18px;
+		color: var(--color-on-night-muted);
+	}
+
+	.cta--photo .cta__body {
+		color: rgb(255 255 255 / 0.74);
+	}
+
+	.cta__actions {
+		max-width: 560px;
+		margin-block-start: 36px;
+	}
+
+	.cta--night {
+		min-height: 0;
+		text-align: center;
+	}
+
+	.cta--night .cta__content {
+		padding-block: clamp(72px, 8vw, 112px);
+	}
+
+	.cta--night .cta__headline,
+	.cta--night .cta__body {
+		margin-inline: auto;
+	}
+
+	.cta--night .cta__headline {
+		max-width: 12em;
+	}
+
+	.cta--night .cta__actions {
+		justify-content: center;
+		margin-inline: auto;
+	}
+
+	.cta :focus-visible {
+		outline-color: var(--color-on-night);
+	}
+
+	@media (max-width: 960px) {
+		.cta--photo {
+			align-items: end;
+			min-height: 560px;
+		}
+
+		:is(.cta--photo, .cta--photo:dir(rtl))::before {
+			background: linear-gradient(
+				to top,
+				rgb(15 14 13 / 0.9),
+				rgb(15 14 13 / 0.6) 50%,
+				rgb(15 14 13 / 0.1)
+			);
+		}
+
+		.cta__content {
+			padding-block: 40px;
+		}
+	}
+
+
+	.showcase__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: 16px 32px;
+		max-width: none;
+	}
+
+	.showcase__header > div {
+		max-width: 780px;
+	}
+
+	.showcase {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	.showcase > li {
+		display: flex;
+	}
+
+	.showcase > li > * {
+		flex: 1;
+	}
+
+
+	.news-list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		gap: 32px 64px;
+		align-items: start;
+	}
+
+	.news-list__more {
+		margin-top: 24px;
+	}
+
+	@media (max-width: 860px) {
+		.news-list {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+
+	.talent-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.talent-card__visual {
+		position: relative;
+		display: grid;
+		place-items: center;
+		aspect-ratio: 4 / 3;
+		background:
+			radial-gradient(
+				80% 90% at 85% 10%,
+				color-mix(in srgb, var(--talent-color) 38%, transparent),
+				transparent 70%
+			),
+			color-mix(in srgb, var(--talent-color) 14%, var(--color-surface));
+	}
+
+	.talent-card__portrait {
+		position: absolute;
+		inset: 0;
+	}
+
+	.talent-card__initial {
+		display: grid;
+		place-items: center;
+		width: 96px;
+		height: 96px;
+		border-radius: 50%;
+		background: var(--talent-color);
+		color: #fff;
+		font-family: var(--font-display);
+		font-size: 44px;
+		font-weight: 700;
+		line-height: 1;
+		box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--talent-color) 70%, transparent);
+	}
+
+	.talent-card__body {
+		display: grid;
+		gap: 6px;
+		padding: 22px 24px 26px;
+	}
+
+	.talent-card__theme {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12.5px;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+
+	.talent-card__theme::before {
+		content: "";
+		flex: none;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--talent-color);
+	}
+
+	.talent-card__name {
+		font-family: var(--font-display);
+		font-size: 24px;
+		font-weight: 700;
+		line-height: 1.35;
+		letter-spacing: 0.04em;
+	}
+
+	/* The whole card is the link target; the name stays the accessible link text */
+	.talent-card__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.talent-card__kana {
+		font-size: 12.5px;
+		color: var(--color-muted);
+		letter-spacing: 0.08em;
+	}
+
+	.talent-card__summary {
+		margin-top: 6px;
+		font-size: 14.5px;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+
+	/* On phones a full-width 4:3 panel per member makes the list very long: lay the card out sideways */
+	@media (max-width: 640px) {
+		.talent-card {
+			flex-direction: row;
+		}
+
+		.talent-card__visual {
+			flex: none;
+			width: 104px;
+			aspect-ratio: auto;
+		}
+
+		.talent-card__initial {
+			width: 60px;
+			height: 60px;
+			font-size: 28px;
+		}
+
+		.talent-card__body {
+			padding: 18px 18px 20px;
+		}
+
+		.talent-card__name {
+			font-size: 20px;
+		}
+
+		.talent-card__summary {
+			margin-top: 2px;
+			font-size: 13.5px;
+		}
+	}
+
+
+	.news-items {
+		display: grid;
+		gap: 12px;
+	}
+
+	.news-item {
+		position: relative;
+		display: grid;
+		gap: 8px;
+		padding: 22px 26px;
+	}
+
+	.news-item__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 14px;
+		font-size: 13px;
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Category chips sit above the card-wide link so they stay clickable */
+	.news-item__category {
+		position: relative;
+		z-index: 1;
+		padding: 2px 10px;
+		border-radius: var(--radius-full);
+		background: var(--color-sunken);
+		color: var(--color-text-secondary);
+		font-size: 12px;
+	}
+
+	.news-item__category:hover {
+		color: var(--color-text);
+	}
+
+	.news-item__title {
+		font-size: 18px;
+		font-weight: 700;
+		line-height: 1.6;
+	}
+
+	.news-item__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.news-item__excerpt {
+		font-size: 14.5px;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+
+
+	.prose {
+		max-width: 40em;
+		font-size: 16.5px;
+		line-height: 1.95;
+		color: var(--color-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.prose > * + * {
+		margin-block-start: 1.1em;
+	}
+
+	.prose :is(h2, h3, h4) {
+		font-family: var(--font-display);
+		font-weight: var(--font-weight-display);
+		line-height: var(--leading-snug);
+		color: var(--color-text);
+		text-wrap: balance;
+	}
+
+	.prose h2 {
+		margin-block-start: 1.8em;
+		font-size: 26px;
+	}
+
+	.prose :is(h3, h4) {
+		margin-block-start: 1.5em;
+		font-size: 21px;
+	}
+
+	.prose :is(ul, ol) {
+		padding-inline-start: 1.4em;
+	}
+
+	.prose ul {
+		list-style: disc;
+	}
+
+	.prose ol {
+		list-style: decimal;
+	}
+
+	.prose li::marker {
+		color: var(--color-muted);
+	}
+
+	.prose li + li {
+		margin-block-start: 0.4em;
+	}
+
+	.prose a {
+		color: var(--color-brand);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.prose strong {
+		font-weight: 700;
+		color: var(--color-text);
+	}
+
+	.prose blockquote {
+		padding-inline-start: 20px;
+		border-inline-start: 2px solid var(--color-border-strong);
+	}
+
+	.prose img {
+		max-width: 100%;
+		height: auto;
+		border-radius: var(--radius-media);
+	}
+
+
+	.page-header {
+		padding-block-start: clamp(56px, 7vw, 104px);
+	}
+
+	.page-header__title {
+		max-width: 14em;
+		font-size: var(--font-size-h2);
+		line-height: var(--leading-snug);
+	}
+
+
+	.talent-hero {
+		margin-block-start: 16px;
+		background:
+			radial-gradient(
+				70% 90% at 90% 0%,
+				color-mix(in srgb, var(--talent-color) 30%, transparent),
+				transparent 70%
+			),
+			color-mix(in srgb, var(--talent-color) 9%, var(--color-sunken));
+	}
+
+	.talent-hero__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		gap: clamp(32px, 5vw, 80px);
+		align-items: center;
+		padding-block: clamp(48px, 7vw, 104px);
+	}
+
+	.talent-hero__visual {
+		display: grid;
+		place-items: center;
+		aspect-ratio: 1;
+		border-radius: var(--radius-media);
+		background: color-mix(in srgb, var(--talent-color) 16%, var(--color-surface));
+	}
+
+	.talent-hero__portrait {
+		width: 100%;
+		height: 100%;
+	}
+
+	.talent-hero__initial {
+		display: grid;
+		place-items: center;
+		width: 58%;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--talent-color);
+		color: #fff;
+		font-family: var(--font-display);
+		font-size: clamp(72px, 11vw, 160px);
+		font-weight: 700;
+		line-height: 1;
+		box-shadow: 0 24px 60px -24px color-mix(in srgb, var(--talent-color) 80%, transparent);
+	}
+
+	.talent-hero__text {
+		display: grid;
+		gap: 14px;
+		justify-items: start;
+	}
+
+	.talent-hero__theme {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 14px;
+		border-radius: var(--radius-full);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.talent-hero__theme::before {
+		content: "";
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--talent-color);
+	}
+
+	.talent-hero__name {
+		font-size: clamp(40px, 6vw, 72px);
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+
+	.talent-hero__reading {
+		font-size: 14px;
+		letter-spacing: 0.1em;
+		color: var(--color-muted);
+	}
+
+	.talent-hero__catch {
+		font-family: var(--font-display);
+		font-size: clamp(20px, 2.2vw, 26px);
+		line-height: 1.6;
+	}
+
+	.talent-hero__links {
+		margin-top: 8px;
+	}
+
+	.talent-hero__links svg {
+		font-size: 17px;
+	}
+
+	.talent-profile__headline {
+		margin-block-end: 28px;
+	}
+
+	.talent-others {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	.talent-others > li {
+		display: flex;
+	}
+
+	.talent-others > li > * {
+		flex: 1;
+	}
+
+	@media (max-width: 860px) {
+		.talent-hero__grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.talent-hero__visual {
+			max-width: 420px;
+			width: 100%;
+			margin-inline: auto;
+		}
+	}
+</style>
+</head>
+<body>
+<!-- 静的プレビュー: EmDash のサイトをサーバーなしで見るための模型。本物は yoshimi-site/ を npm run dev で動かす -->
+<header class="site-header"><div class="nav">
+	<a href="home.html" class="nav__logo">ヨシミムスビ</a>
+	<nav class="nav__links" aria-label="メイン"><a href="#">メンバー</a><a href="#">活動</a><a href="#">お知らせ</a><a href="#">会社概要</a></nav>
+	<div class="nav__actions"><a href="#" class="btn btn-sm nav__cta">お問い合わせ</a><button type="button" class="nav__menu-btn" aria-expanded="false" aria-label="メニュー"><svg class="nav__menu-open" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M224 128a8 8 0 0 1-8 8H40a8 8 0 0 1 0-16h176a8 8 0 0 1 8 8M40 72h176a8 8 0 0 0 0-16H40a8 8 0 0 0 0 16m176 112H40a8 8 0 0 0 0 16h176a8 8 0 0 0 0-16"/></svg><svg class="nav__menu-close" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/></svg></button></div>
+	<nav class="nav__panel" aria-label="メイン" hidden><a href="#">メンバー</a><a href="#">活動</a><a href="#">お知らせ</a><a href="#">会社概要</a></nav>
+</div></header>
+<main id="main"><div class="page-blocks"><section class="hero"><div class="container"><a href="#" class="hero__announce rise">公式サイトをリニューアルしました<svg class="arrow" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32"/></svg></a>
+	<h1 class="display hero__headline rise">ケアと暮らしに、やさしい声を。</h1>
+	<div class="hero__row rise"><p class="lead hero__lead">ヨシミムスビは、看護・介護・健康・美容をテーマに発信するキャラクタープロジェクト「あっぷるぐみ」を運営しています。現場で働く人と、毎日を支える人に向けて、肩の力が抜ける言葉と、確かめながら使える小さな知識を届けます。</p><div class="actions"><a href="#" class="btn btn-primary btn-lg">メンバーを見る<svg class="arrow" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32"/></svg></a><a href="#" class="btn btn-secondary btn-lg">お仕事のご相談</a></div></div></div></section><section id="members" class="container section"><header class="section-header showcase__header">
+	<div><p class="eyebrow">あっぷるぐみ</p><h2 class="section-headline">5 人のメンバー</h2><p class="section-subheadline">それぞれの得意分野から、毎日の発信を続けています。</p></div><a href="#" class="text-link">メンバー一覧へ<svg class="arrow" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32"/></svg></a></header>
+	<ul class="showcase" role="list"><li><article class="card card--lift talent-card" style="--talent-color: #4a9cc7">
+	<div class="talent-card__visual" aria-hidden="true"><span class="talent-card__initial">白</span></div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">看護師・医療職・健康</p>
+		<h3 class="talent-card__name"><a href="talent.html" class="talent-card__link">白衣ゆい</a></h3>
+		<p class="talent-card__summary">看護師や医療職として働く人に向けて、ねぎらいと健康の話題を届けるメンバー。</p>
+	</div>
+</article></li><li><article class="card card--lift talent-card" style="--talent-color: #d9708a">
+	<div class="talent-card__visual" aria-hidden="true"><span class="talent-card__initial">み</span></div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">朝のあいさつ・メンタルケア・セルフケア</p>
+		<h3 class="talent-card__name"><a href="talent.html" class="talent-card__link">みもり うめ</a></h3>
+		<p class="talent-card__kana">みもり うめ</p><p class="talent-card__summary">毎朝のあいさつから一日を始めるメンバー。がんばりすぎない毎日のための、小さなセルフケアを話題にしています。</p>
+	</div>
+</article></li><li><article class="card card--lift talent-card" style="--talent-color: #5b4a8b">
+	<div class="talent-card__visual" aria-hidden="true"><span class="talent-card__initial">胡</span></div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">医療・看護・健康リテラシー</p>
+		<h3 class="talent-card__name"><a href="talent.html" class="talent-card__link">胡蝶くろの</a></h3>
+		<p class="talent-card__kana">こちょう くろの</p><p class="talent-card__summary">落ち着いた語り口で、医療や看護、健康情報との付き合い方を話題にするメンバー。</p>
+	</div>
+</article></li><li><article class="card card--lift talent-card" style="--talent-color: #d98a3d">
+	<div class="talent-card__visual" aria-hidden="true"><span class="talent-card__initial">宇</span></div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">美容・健康・生活習慣</p>
+		<h3 class="talent-card__name"><a href="talent.html" class="talent-card__link">宇迦元まりの</a></h3>
+		<p class="talent-card__kana">うかもと まりの</p><p class="talent-card__summary">美容と健康、毎日の生活習慣を、無理なく続けられる目線で話題にするメンバー。</p>
+	</div>
+</article></li><li><article class="card card--lift talent-card" style="--talent-color: #4f8a5b">
+	<div class="talent-card__visual" aria-hidden="true"><span class="talent-card__initial">ク</span></div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">介護・福祉</p>
+		<h3 class="talent-card__name"><a href="talent.html" class="talent-card__link">クロエ・フォリウム</a></h3>
+		<p class="talent-card__kana">くろえ・ふぉりうむ</p><p class="talent-card__summary">介護や福祉の現場で働く人への敬意を大切に、日々の頑張りに寄り添うメンバー。</p>
+	</div>
+</article></li></ul></section><section id="activities" class="sheet sheet--sunken sheet-section"><div class="container sheet-body">
+	<header class="section-header"><p class="eyebrow">活動</p><h2 class="section-headline">キャラクターだから、届く言葉がある。 <span class="section-headline__muted">ヨシミムスビの主な活動です。</span></h2></header>
+	<ul class="features" role="list"><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M140 128a12 12 0 1 1-12-12a12 12 0 0 1 12 12m-56-12a12 12 0 1 0 12 12a12 12 0 0 0-12-12m88 0a12 12 0 1 0 12 12a12 12 0 0 0-12-12m60 12a104 104 0 0 1-152.88 91.82l-34.05 11.35a16 16 0 0 1-20.24-20.24l11.35-34.05A104 104 0 1 1 232 128m-16 0a88 88 0 1 0-164.19 44.06a8 8 0 0 1 .66 6.54L40 216l37.4-12.47a7.9 7.9 0 0 1 2.53-.42a8 8 0 0 1 4 1.08A88 88 0 0 0 216 128"/></svg></span><h3 class="feature__title">SNS・配信での情報発信</h3><p class="feature__description">X や YouTube で、朝のあいさつから健康にまつわる小さな知識まで、毎日の発信を続けています。</p></li><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M230.33 141.06a24.34 24.34 0 0 0-18.61-4.77C230.5 117.33 240 98.48 240 80c0-26.47-21.29-48-47.46-48A47.58 47.58 0 0 0 156 48.75A47.58 47.58 0 0 0 119.46 32C93.29 32 72 53.53 72 80c0 11 3.24 21.69 10.06 33a31.87 31.87 0 0 0-14.75 8.4L44.69 144H16a16 16 0 0 0-16 16v40a16 16 0 0 0 16 16h104a8 8 0 0 0 1.94-.24l64-16a7 7 0 0 0 1.19-.4L226 182.82l.44-.2a24.6 24.6 0 0 0 3.93-41.56ZM119.46 48a31.15 31.15 0 0 1 29.14 19a8 8 0 0 0 14.8 0a31.15 31.15 0 0 1 29.14-19C209.59 48 224 62.65 224 80c0 19.51-15.79 41.58-45.66 63.9l-11.09 2.55A28 28 0 0 0 140 112h-39.32C92.05 100.36 88 90.12 88 80c0-17.35 14.41-32 31.46-32M16 160h24v40H16Zm203.43 8.21l-38 16.18L119 200H56v-44.69l22.63-22.62A15.86 15.86 0 0 1 89.94 128H140a12 12 0 0 1 0 24h-28a8 8 0 0 0 0 16h32a8.3 8.3 0 0 0 1.79-.2l67-15.41l.31-.08a8.6 8.6 0 0 1 6.3 15.9Z"/></svg></span><h3 class="feature__title">医療・介護の現場へのエール</h3><p class="feature__description">看護師、介護職、福祉の現場で働く人に向けて、ねぎらいと共感を届けます。</p></li><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M240 208h-16V96a16 16 0 0 0-16-16h-64V32a16 16 0 0 0-24.88-13.32L39.12 72A16 16 0 0 0 32 85.34V208H16a8 8 0 0 0 0 16h224a8 8 0 0 0 0-16M208 96v112h-64V96ZM48 85.34L128 32v176H48ZM112 112v16a8 8 0 0 1-16 0v-16a8 8 0 1 1 16 0m-32 0v16a8 8 0 0 1-16 0v-16a8 8 0 1 1 16 0m0 56v16a8 8 0 0 1-16 0v-16a8 8 0 0 1 16 0m32 0v16a8 8 0 0 1-16 0v-16a8 8 0 0 1 16 0"/></svg></span><h3 class="feature__title">企業・団体とのタイアップ</h3><p class="feature__description">商品やサービス、啓発活動の紹介を、メンバーのテーマと世界観に合わせて企画します。</p></li><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M176 112h-24a8 8 0 0 1 0-16h24a8 8 0 0 1 0 16m-72-16h-8v-8a8 8 0 0 0-16 0v8h-8a8 8 0 0 0 0 16h8v8a8 8 0 0 0 16 0v-8h8a8 8 0 0 0 0-16m137.48 104.65a36 36 0 0 1-54.94 4.81c-.12-.12-.24-.24-.35-.37L146.48 160h-37l-39.67 45.09l-.35.37A36.08 36.08 0 0 1 44 216a36 36 0 0 1-35.44-42.25a.7.7 0 0 1 0-.14l16.37-84.09A59.88 59.88 0 0 1 83.89 40H172a60.08 60.08 0 0 1 59 49.25v.18l16.37 84.17a.7.7 0 0 1 0 .14a35.74 35.74 0 0 1-5.89 26.91M172 144a44 44 0 0 0 0-88H83.89a43.9 43.9 0 0 0-43.21 36.37v.13L24.3 176.59A20 20 0 0 0 58 194.3l41.92-47.59a8 8 0 0 1 6-2.71Zm59.7 32.59l-8.74-45A60 60 0 0 1 172 160h-4.2l30.2 34.31a20.09 20.09 0 0 0 17.46 5.39a20 20 0 0 0 16.23-23.11Z"/></svg></span><h3 class="feature__title">イベント・配信のキャスティング</h3><p class="feature__description">ゲームイベントや配信企画に合わせて、出演する VTuber の選定から依頼の調整までを行います。</p></li><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M247.59 61.22L195.83 33a8 8 0 0 0-3.83-1h-32a8 8 0 0 0-8 8a24 24 0 0 1-48 0a8 8 0 0 0-8-8H64a8 8 0 0 0-3.84 1L8.41 61.22a15.76 15.76 0 0 0-6.59 21.26l19.27 36.81A16.37 16.37 0 0 0 35.67 128H56v80a16 16 0 0 0 16 16h112a16 16 0 0 0 16-16v-80h20.34a16.37 16.37 0 0 0 14.58-8.71l19.27-36.81a15.76 15.76 0 0 0-6.6-21.26M35.67 112a.62.62 0 0 1-.41-.13L16.09 75.26L56 53.48V112ZM184 208H72V48h16.8a40 40 0 0 0 78.38 0H184Zm36.75-96.14a.55.55 0 0 1-.41.14H200V53.48l39.92 21.78Z"/></svg></span><h3 class="feature__title">グッズ・コンテンツ制作</h3><p class="feature__description">プリントグッズなど、キャラクターを使ったコンテンツを企画・制作します。</p></li><li class="card card--lift feature"><span class="icon-tile" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M200 48h-64V16a8 8 0 0 0-16 0v32H56a32 32 0 0 0-32 32v112a32 32 0 0 0 32 32h144a32 32 0 0 0 32-32V80a32 32 0 0 0-32-32m16 144a16 16 0 0 1-16 16H56a16 16 0 0 1-16-16V80a16 16 0 0 1 16-16h144a16 16 0 0 1 16 16Zm-52-56H92a28 28 0 0 0 0 56h72a28 28 0 0 0 0-56m-24 16v24h-24v-24Zm-60 12a12 12 0 0 1 12-12h8v24h-8a12 12 0 0 1-12-12m84 12h-8v-24h8a12 12 0 0 1 0 24m-92-68a12 12 0 1 1 12 12a12 12 0 0 1-12-12m88 0a12 12 0 1 1 12 12a12 12 0 0 1-12-12"/></svg></span><h3 class="feature__title">AI を取り入れた運営</h3><p class="feature__description">音声合成や AI エージェントを取り入れ、少人数でも発信の質と量を保てる体制をつくっています。</p></li></ul></div></section><section id="policy" class="split section split--text-only"><div class="container split__grid"><div>
+	<p class="eyebrow">発信で大切にしていること</p><h2 class="section-headline split__headline">寄り添うけれど、言い切らない。</h2><p class="split__body">医療や健康の話題は、ひとりひとり事情が違います。だからわたしたちは、相手の言葉をよく読んでから返し、診断や効果を断定しないことを決めています。</p><p class="split__body">キャラクターの明るさと、情報への慎重さ。その両方を大事にしています。</p><ul class="split__points" role="list"><li><span class="tick" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32"/></svg></span>診断・治療・効果を言い切らない</li><li><span class="tick" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32"/></svg></span>現場で働く人への敬意をいちばんに置く</li><li><span class="tick" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32"/></svg></span>宣伝よりも、相手との会話を大切にする</li><li><span class="tick" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32"/></svg></span>同じ言葉を使い回さず、一件ずつ考えて返す</li></ul><a href="#" class="text-link split__link">メンバーを見る<svg class="arrow" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32"/></svg></a></div></div></section><section id="news" class="container section news-list"><header class="news-list__header">
+	<p class="eyebrow">お知らせ</p><h2 class="section-headline">最新のお知らせ</h2><a href="#" class="text-link news-list__more">お知らせ一覧へ<svg class="arrow" aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="m221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32"/></svg></a></header><ul class="news-items" role="list"><li class="card card--lift news-item">
+	<div class="news-item__meta"><time>2026/10/27</time><a href="#" class="news-item__category">お知らせ</a></div>
+	<h3 class="news-item__title"><a href="#" class="news-item__link">公式サイトをリニューアルしました</a></h3>
+	<p class="news-item__excerpt">AI ネイティブな CMS「EmDash」で、公式サイトを新しくしました。メンバー紹介とお知らせを、これまでより早くお届けします。</p>
+</li></ul></section><section id="faq" class="container section faq faq--with-intro"><div class="faq__intro">
+	<h2 class="section-headline">よくあるご質問</h2></div><div class="faq__list"><details class="card faq__item"><summary class="faq__question"><span>お仕事の相談はどこからできますか？</span><span class="faq__icon" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M224 128a8 8 0 0 1-8 8h-80v80a8 8 0 0 1-16 0v-80H40a8 8 0 0 1 0-16h80V40a8 8 0 0 1 16 0v80h80a8 8 0 0 1 8 8"/></svg></span></summary><div class="faq__answer"><p>お問い合わせページからご連絡ください。内容を確認のうえ、担当よりご返信します。</p></div></details><details class="card faq__item" open><summary class="faq__question"><span>医療や健康について、個別に相談できますか？</span><span class="faq__icon" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M224 128a8 8 0 0 1-8 8h-80v80a8 8 0 0 1-16 0v-80H40a8 8 0 0 1 0-16h80V40a8 8 0 0 1 16 0v80h80a8 8 0 0 1 8 8"/></svg></span></summary><div class="faq__answer"><p>個別の診断や治療についてのご相談はお受けしていません。</p><p>体調や症状のご心配は、かかりつけの医療機関や専門の相談窓口にご相談ください。</p></div></details><details class="card faq__item"><summary class="faq__question"><span>メンバーに応援メッセージを送りたいです。</span><span class="faq__icon" aria-hidden="true"><svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 256 256" fill="currentColor"><path fill="currentColor" d="M224 128a8 8 0 0 1-8 8h-80v80a8 8 0 0 1-16 0v-80H40a8 8 0 0 1 0-16h80V40a8 8 0 0 1 16 0v80h80a8 8 0 0 1 8 8"/></svg></span></summary><div class="faq__answer"><p>各メンバーの X へのリプライや、配信のコメントでお寄せください。ひとつひとつ大切に読んでいます。</p></div></details></div></section><section class="cta sheet sheet-section cta--night sheet--night"><div class="container cta__content">
+	<h2 class="display cta__headline">いっしょに、やさしい発信を。</h2><p class="cta__body">タイアップ、出演のご依頼、取材など、お気軽にご相談ください。</p><div class="actions cta__actions"><a href="#" class="btn btn-lg btn-light">お問い合わせ</a><a href="#" class="btn btn-lg btn-glass">会社概要</a></div></div></section></div></main>
+<footer class="site-footer"><div class="container">
+	<div class="footer__grid"><div class="footer__brand"><a href="#" class="footer__logo">ヨシミムスビ</a>
+	<p class="footer__tagline">ケアと暮らしを、キャラクターでむすぶ。</p></div><div class="footer__column"><h2 class="footer__heading">あっぷるぐみ</h2><ul class="footer__links"><li><a href="#" class="footer__link">メンバー一覧</a></li><li><a href="#" class="footer__link">発信で大切にしていること</a></li><li><a href="#" class="footer__link">お知らせ</a></li></ul></div><div class="footer__column"><h2 class="footer__heading">ヨシミムスビ</h2><ul class="footer__links"><li><a href="#" class="footer__link">活動</a></li><li><a href="#" class="footer__link">会社概要</a></li><li><a href="#" class="footer__link">お問い合わせ</a></li></ul></div><div class="footer__column"><h2 class="footer__heading">このサイトについて</h2><ul class="footer__links"><li><a href="#" class="footer__link">このサイトの仕組み</a></li><li><a href="#" class="footer__link">AI 向けサイト情報（llms.txt）</a></li><li><a href="#" class="footer__link">お知らせの RSS</a></li></ul></div></div>
+	<div class="footer__legal"><p>&copy; 2026 ヨシミムスビ</p>
+	<div class="theme-switcher" role="group" aria-label="表示モード"><button type="button" class="theme-btn" aria-pressed="true">ライト</button><button type="button" class="theme-btn" aria-pressed="false">ダーク</button><button type="button" class="theme-btn" aria-pressed="false">自動</button></div>
+	<p class="footer__powered"><a href="#">AI と人で更新しているサイトです</a>（<a href="#">EmDash</a>）</p></div>
+</div><div class="footer__wordmark" aria-hidden="true" style="--wordmark-length: 6">ヨシミムスビ</div></footer>
+</body>
+</html>

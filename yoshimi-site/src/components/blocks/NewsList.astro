@@ -1,0 +1,69 @@
+---
+import { Icon } from "astro-iconset/components";
+import { getEmDashCollection, getTermsForEntries } from "emdash";
+import type { BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+import NewsItems from "../NewsItems.astro";
+
+type NewsListBlock = Extract<PageContentBlock, { _type: "news_list" }>;
+type Props = BlockComponentProps<NewsListBlock>;
+
+const DEFAULT_LIMIT = 3;
+
+const { value } = Astro.props;
+const { anchor_id, eyebrow, headline, link_label } = value;
+const limit = value.limit && value.limit > 0 ? value.limit : DEFAULT_LIMIT;
+
+const { entries, cacheHint } = await getEmDashCollection("news", {
+	orderBy: { published_at: "desc" },
+	limit,
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const categoriesByEntry = await getTermsForEntries(
+	"news",
+	entries.map((entry) => entry.data.id),
+	"news_category",
+);
+const items = entries.map((entry) => ({
+	entry,
+	categories: categoriesByEntry.get(entry.data.id) ?? [],
+}));
+---
+
+{
+	items.length > 0 && (
+		<section id={anchor_id || undefined} class="container section news-list">
+			<header class="news-list__header">
+				{eyebrow && <p class="eyebrow">{eyebrow}</p>}
+				<h2 class="section-headline">{headline}</h2>
+				{link_label && (
+					<a href="/news" class="text-link news-list__more">
+						{link_label}
+						<Icon name="ph:arrow-right" class="arrow" aria-hidden="true" />
+					</a>
+				)}
+			</header>
+			<NewsItems items={items} />
+		</section>
+	)
+}
+
+<style>
+	.news-list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		gap: 32px 64px;
+		align-items: start;
+	}
+
+	.news-list__more {
+		margin-top: 24px;
+	}
+
+	@media (max-width: 860px) {
+		.news-list {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>

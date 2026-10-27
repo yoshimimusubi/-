@@ -1,0 +1,103 @@
+---
+import { sanitizeHref } from "emdash";
+import type { BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+
+type CompanyProfileBlock = Extract<PageContentBlock, { _type: "company_profile" }>;
+type Props = BlockComponentProps<CompanyProfileBlock>;
+
+const { value } = Astro.props;
+const { anchor_id, headline, rows } = value;
+
+const lines = (text: string) =>
+	text
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean);
+---
+
+<section id={anchor_id || undefined} class="container section">
+	<div class="profile">
+		{headline && <h2 class="section-headline profile__headline">{headline}</h2>}
+		<dl class="card profile__list">
+			{
+				rows.map((row) => (
+					<div class="profile__row">
+						<dt class="profile__label">{row.label}</dt>
+						<dd class="profile__value">
+							{row.url ? (
+								<a href={sanitizeHref(row.url)} class="profile__link">
+									{lines(row.value).map((line) => (
+										<span class="profile__line">{line}</span>
+									))}
+								</a>
+							) : (
+								lines(row.value).map((line) => <span class="profile__line">{line}</span>)
+							)}
+						</dd>
+					</div>
+				))
+			}
+		</dl>
+	</div>
+</section>
+
+<style>
+	.profile {
+		max-width: 880px;
+		margin-inline: auto;
+	}
+
+	.profile__headline {
+		margin-block-end: 32px;
+	}
+
+	.profile__list {
+		display: grid;
+		padding: 8px clamp(20px, 3vw, 40px);
+	}
+
+	.profile__row {
+		display: grid;
+		grid-template-columns: 9em minmax(0, 1fr);
+		gap: 8px 32px;
+		padding-block: 22px;
+	}
+
+	.profile__row + .profile__row {
+		box-shadow: 0 -1px 0 var(--color-border);
+	}
+
+	.profile__label {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--color-muted);
+	}
+
+	.profile__value {
+		display: grid;
+		gap: 4px;
+		font-size: 16px;
+		line-height: 1.8;
+	}
+
+	.profile__line {
+		display: block;
+	}
+
+	.profile__link {
+		display: grid;
+		gap: 4px;
+		color: var(--color-brand);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	@media (max-width: 640px) {
+		.profile__row {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 4px;
+			padding-block: 18px;
+		}
+	}
+</style>

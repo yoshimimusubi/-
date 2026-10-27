@@ -1,0 +1,166 @@
+---
+import type { ContentEntry } from "emdash";
+import { Image } from "emdash/ui";
+import type { Talent } from "../../emdash-env";
+import { talentColor, talentInitial, talentPath } from "../utils/talent";
+
+interface Props {
+	talent: ContentEntry<Talent>;
+	/** Heading level of the name inside the surrounding section. */
+	headingLevel?: "h2" | "h3";
+}
+
+const { talent, headingLevel = "h3" } = Astro.props;
+const { title, name_kana, theme, summary, portrait, color } = talent.data;
+const Heading = headingLevel;
+---
+
+<article class="card card--lift talent-card" style={`--talent-color: ${talentColor(color)}`}>
+	<div class="talent-card__visual" aria-hidden={portrait ? undefined : "true"}>
+		{
+			portrait ? (
+				<div class="talent-card__portrait media__img">
+					<Image image={portrait} />
+				</div>
+			) : (
+				<span class="talent-card__initial">{talentInitial(title)}</span>
+			)
+		}
+	</div>
+	<div class="talent-card__body">
+		<p class="talent-card__theme">{theme}</p>
+		<Heading class="talent-card__name">
+			<a href={talentPath(talent.id)} class="talent-card__link">{title}</a>
+		</Heading>
+		{name_kana && <p class="talent-card__kana">{name_kana}</p>}
+		{summary && <p class="talent-card__summary">{summary}</p>}
+	</div>
+</article>
+
+<style>
+	.talent-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.talent-card__visual {
+		position: relative;
+		display: grid;
+		place-items: center;
+		aspect-ratio: 4 / 3;
+		background:
+			radial-gradient(
+				80% 90% at 85% 10%,
+				color-mix(in srgb, var(--talent-color) 38%, transparent),
+				transparent 70%
+			),
+			color-mix(in srgb, var(--talent-color) 14%, var(--color-surface));
+	}
+
+	.talent-card__portrait {
+		position: absolute;
+		inset: 0;
+	}
+
+	.talent-card__initial {
+		display: grid;
+		place-items: center;
+		width: 96px;
+		height: 96px;
+		border-radius: 50%;
+		background: var(--talent-color);
+		color: #fff;
+		font-family: var(--font-display);
+		font-size: 44px;
+		font-weight: 700;
+		line-height: 1;
+		box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--talent-color) 70%, transparent);
+	}
+
+	.talent-card__body {
+		display: grid;
+		gap: 6px;
+		padding: 22px 24px 26px;
+	}
+
+	.talent-card__theme {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12.5px;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+
+	.talent-card__theme::before {
+		content: "";
+		flex: none;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--talent-color);
+	}
+
+	.talent-card__name {
+		font-family: var(--font-display);
+		font-size: 24px;
+		font-weight: 700;
+		line-height: 1.35;
+		letter-spacing: 0.04em;
+	}
+
+	/* The whole card is the link target; the name stays the accessible link text */
+	.talent-card__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.talent-card__kana {
+		font-size: 12.5px;
+		color: var(--color-muted);
+		letter-spacing: 0.08em;
+	}
+
+	.talent-card__summary {
+		margin-top: 6px;
+		font-size: 14.5px;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+
+	/* On phones a full-width 4:3 panel per member makes the list very long: lay the card out sideways */
+	@media (max-width: 640px) {
+		.talent-card {
+			flex-direction: row;
+		}
+
+		.talent-card__visual {
+			flex: none;
+			width: 104px;
+			aspect-ratio: auto;
+		}
+
+		.talent-card__initial {
+			width: 60px;
+			height: 60px;
+			font-size: 28px;
+		}
+
+		.talent-card__body {
+			padding: 18px 18px 20px;
+		}
+
+		.talent-card__name {
+			font-size: 20px;
+		}
+
+		.talent-card__summary {
+			margin-top: 2px;
+			font-size: 13.5px;
+		}
+	}
+</style>

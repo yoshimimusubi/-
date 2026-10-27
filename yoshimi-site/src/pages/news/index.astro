@@ -1,0 +1,162 @@
+---
+import { Icon } from "astro-iconset/components";
+import { getEmDashCollection, getTaxonomyTermsWithCacheHint, getTermsForEntries } from "emdash";
+import Base from "../../layouts/Base.astro";
+import NewsItems from "../../components/NewsItems.astro";
+
+const PAGE_SIZE = 20;
+
+// The category filter goes to the database as `where`, so the page never
+// loads every post just to throw most of them away.
+const activeCategory = Astro.url.searchParams.get("category");
+const cursor = Astro.url.searchParams.get("cursor") ?? undefined;
+
+const [newsResult, categoriesResult] = await Promise.all([
+	getEmDashCollection("news", {
+		orderBy: { published_at: "desc" },
+		limit: PAGE_SIZE,
+		cursor,
+		...(activeCategory ? { where: { news_category: activeCategory } } : {}),
+	}),
+	getTaxonomyTermsWithCacheHint("news_category", { includeCounts: false }),
+]);
+if (newsResult.error) {
+	return new Response("お知らせを読み込めませんでした", { status: 500 });
+}
+
+const { entries, nextCursor } = newsResult;
+const categories = categoriesResult.data;
+if (Astro.cache?.enabled) {
+	Astro.cache.set(newsResult.cacheHint);
+	Astro.cache.set(categoriesResult.cacheHint);
+}
+
+const categoriesByEntry = await getTermsForEntries(
+	"news",
+	entries.map((entry) => entry.data.id),
+	"news_category",
+);
+const items = entries.map((entry) => ({
+	entry,
+	categories: categoriesByEntry.get(entry.data.id) ?? [],
+}));
+
+const activeLabel = categories.find((term) => term.slug === activeCategory)?.label;
+
+function pageUrl(next: string): string {
+	const params = new URLSearchParams({ cursor: next });
+	if (activeCategory) params.set("category", activeCategory);
+	return `/news?${params.toString()}`;
+}
+---
+
+<Base
+	title={activeLabel ? `${activeLabel} — お知らせ` : "お知らせ"}
+	description="ヨシミムスビとあっぷるぐみからのお知らせです。"
+>
+	<header class="container page-intro">
+		<p class="eyebrow">ヨシミムスビ・あっぷるぐみ</p>
+		<h1 class="display page-intro__title">お知らせ</h1>
+	</header>
+
+	<section class="container section news-index">
+		{
+			categories.length > 0 && (
+				<nav class="news-filter" aria-label="お知らせの種類">
+					<a
+						href="/news"
+						class="news-filter__chip"
+						aria-current={activeCategory ? undefined : "page"}
+					>
+						すべて
+					</a>
+					{categories.map((term) => (
+						<a
+							href={`/news?category=${encodeURIComponent(term.slug)}`}
+							class="news-filter__chip"
+							aria-current={term.slug === activeCategory ? "page" : undefined}
+						>
+							{term.label}
+						</a>
+					))}
+				</nav>
+			)
+		}
+
+		{
+			items.length > 0 ? (
+				<NewsItems items={items} headingLevel="h2" />
+			) : (
+				<p class="lead news-index__empty">
+					{activeLabel ? `「${activeLabel}」のお知らせはまだありません。` : "お知らせはまだありません。"}
+				</p>
+			)
+		}
+
+		{
+			nextCursor && (
+				<div class="news-index__more">
+					<a href={pageUrl(nextCursor)} class="btn btn-secondary">
+						以前のお知らせ
+						<Icon name="ph:arrow-right" class="arrow" aria-hidden="true" />
+					</a>
+				</div>
+			)
+		}
+	</section>
+</Base>
+
+<style>
+	.page-intro {
+		padding-block-start: clamp(56px, 7vw, 104px);
+	}
+
+	.page-intro__title {
+		margin-top: 12px;
+		font-size: var(--font-size-h2);
+	}
+
+	.news-index {
+		display: grid;
+		gap: 28px;
+		max-width: 880px;
+	}
+
+	.news-filter {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.news-filter__chip {
+		display: inline-flex;
+		align-items: center;
+		min-height: 36px;
+		padding-inline: 16px;
+		border-radius: var(--radius-full);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+		font-size: 14px;
+		color: var(--color-text-secondary);
+		transition: color var(--transition-fast);
+	}
+
+	.news-filter__chip:hover {
+		color: var(--color-text);
+	}
+
+	.news-filter__chip[aria-current="page"] {
+		background: var(--color-brand);
+		color: var(--color-on-brand);
+		box-shadow: none;
+	}
+
+	.news-index__empty {
+		padding-block: 40px;
+	}
+
+	.news-index__more {
+		display: flex;
+		justify-content: center;
+	}
+</style>

@@ -1,0 +1,128 @@
+---
+import { Icon } from "astro-iconset/components";
+import { decodeSlug, getEmDashEntry, getEntryTerms, getSeoMeta } from "emdash";
+import { Image } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import Prose from "../../components/Prose.astro";
+import { formatDate } from "../../utils/news";
+
+const slug = decodeSlug(Astro.params.slug);
+if (!slug) return Astro.rewrite("/404");
+
+const { entry: post, error, cacheHint } = await getEmDashEntry("news", slug);
+if (error) return new Response("お知らせを読み込めませんでした", { status: 500 });
+if (!post) return Astro.rewrite("/404");
+
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const categories = await getEntryTerms("news", post.data.id, "news_category");
+const { title, excerpt, featured_image, content, publishedAt } = post.data;
+
+const seo = getSeoMeta(post, {
+	siteUrl: Astro.url.origin,
+	path: `/news/${post.id}`,
+	defaultDescription: excerpt,
+	defaultOgImage: featured_image?.src,
+});
+---
+
+<Base
+	title={seo.title}
+	pageTitle={title}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	type="article"
+	content={{ collection: "news", id: post.data.id, slug: post.id }}
+>
+	<article class="container section post">
+		<header class="post__header">
+			<div class="post__meta">
+				<time datetime={publishedAt?.toISOString()}>{formatDate(publishedAt)}</time>
+				{
+					categories.map((term) => (
+						<a href={`/news?category=${encodeURIComponent(term.slug)}`} class="post__category">
+							{term.label}
+						</a>
+					))
+				}
+			</div>
+			<h1 class="display post__title" {...post.edit.title}>{title}</h1>
+			{
+				excerpt && (
+					<p class="lead post__excerpt" {...post.edit.excerpt}>
+						{excerpt}
+					</p>
+				)
+			}
+		</header>
+
+		{
+			featured_image && (
+				<div class="media post__image">
+					<div class="media__img" {...post.edit.featured_image}>
+						<Image image={featured_image} priority />
+					</div>
+				</div>
+			)
+		}
+
+		<Prose value={content} edit={post.edit.content} />
+
+		<footer class="post__footer">
+			<a href="/news" class="text-link">
+				<Icon name="ph:arrow-left" class="post__back" aria-hidden="true" />
+				お知らせ一覧へ
+			</a>
+		</footer>
+	</article>
+</Base>
+
+<style>
+	.post {
+		display: grid;
+		gap: 36px;
+		max-width: 820px;
+	}
+
+	.post__header {
+		display: grid;
+		gap: 16px;
+	}
+
+	.post__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 14px;
+		font-size: 13.5px;
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.post__category {
+		padding: 2px 10px;
+		border-radius: var(--radius-full);
+		background: var(--color-sunken);
+		color: var(--color-text-secondary);
+		font-size: 12.5px;
+	}
+
+	.post__title {
+		font-size: clamp(28px, 3.6vw, 42px);
+		font-weight: 700;
+	}
+
+	.post__image {
+		aspect-ratio: 16 / 9;
+	}
+
+	.post__footer {
+		padding-top: 12px;
+	}
+
+	.post__back {
+		font-size: 15px;
+	}
+</style>

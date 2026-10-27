@@ -1,0 +1,71 @@
+---
+import { getContentSeo, getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
+import Base from "../layouts/Base.astro";
+import PageView from "../components/PageView.astro";
+import { heroSeoDefaults } from "../utils/page";
+import { resolveSiteIdentity } from "../utils/site";
+
+const [{ entry: page, cacheHint }, settings] = await Promise.all([
+	getEmDashEntry("pages", "home"),
+	getSiteSettings(),
+]);
+
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const { siteTitle, siteTagline, siteLogo } = resolveSiteIdentity(settings);
+const seo = page
+	? getSeoMeta(page, {
+			siteUrl: Astro.url.origin,
+			path: "/",
+			...heroSeoDefaults(page.data.content, Astro.url.origin),
+		})
+	: null;
+// The home page is titled after the site unless its SEO panel sets a title.
+const seoTitle = page ? getContentSeo(page)?.title || undefined : undefined;
+
+// 会社の構造化データ。検索エンジンや AI が「誰のサイトか」を取り違えないようにする。
+const organization = {
+	"@context": "https://schema.org",
+	"@type": "Organization",
+	name: siteTitle,
+	url: Astro.url.origin,
+	...(siteTagline ? { description: siteTagline } : {}),
+	...(siteLogo ? { logo: siteLogo.url } : {}),
+};
+// "<" is escaped so CMS text can never close the script element early.
+const organizationJson = JSON.stringify(organization).replace(/</g, "\\u003c");
+---
+
+<Base
+	title={seoTitle}
+	pageTitle={seoTitle}
+	description={seo?.description}
+	image={seo?.ogImage}
+	canonical={seo?.canonical}
+	robots={seo?.robots}
+	content={page ? { collection: "pages", id: page.data.id, slug: page.id } : undefined}
+>
+	<script is:inline slot="head" type="application/ld+json" set:html={organizationJson} />
+	{
+		page ? (
+			<PageView page={page} heading={siteTitle} />
+		) : (
+			<section class="container empty-state">
+				<h1 class="display empty-state__title">{siteTitle}</h1>
+				{siteTagline && <p class="lead">{siteTagline}</p>}
+				{Astro.locals.user && (
+					<>
+						<p class="lead">
+							スラッグが「home」の固定ページを作って公開すると、ここに表示されます。
+						</p>
+						<div class="actions">
+							<a href="/_emdash/admin/content/pages/new" class="btn btn-lg">
+								ページを作る
+							</a>
+						</div>
+					</>
+				)}
+			</section>
+		)
+	}
+</Base>

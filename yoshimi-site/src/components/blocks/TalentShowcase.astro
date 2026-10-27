@@ -1,0 +1,76 @@
+---
+import { Icon } from "astro-iconset/components";
+import { getEmDashCollection } from "emdash";
+import type { BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+import TalentCard from "../TalentCard.astro";
+
+type TalentShowcaseBlock = Extract<PageContentBlock, { _type: "talent_showcase" }>;
+type Props = BlockComponentProps<TalentShowcaseBlock>;
+
+const { value } = Astro.props;
+const { anchor_id, eyebrow, headline, subheadline, link_label } = value;
+const limit = value.limit && value.limit > 0 ? value.limit : undefined;
+
+const { entries: talents, cacheHint } = await getEmDashCollection("talents", {
+	orderBy: { sort_order: "asc", published_at: "asc" },
+	...(limit ? { limit } : {}),
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+---
+
+{
+	talents.length > 0 && (
+		<section id={anchor_id || undefined} class="container section">
+			<header class="section-header showcase__header">
+				<div>
+					{eyebrow && <p class="eyebrow">{eyebrow}</p>}
+					<h2 class="section-headline">{headline}</h2>
+					{subheadline && <p class="section-subheadline">{subheadline}</p>}
+				</div>
+				{link_label && (
+					<a href="/talents" class="text-link">
+						{link_label}
+						<Icon name="ph:arrow-right" class="arrow" aria-hidden="true" />
+					</a>
+				)}
+			</header>
+			<ul class="showcase" role="list">
+				{talents.map((talent) => (
+					<li>
+						<TalentCard talent={talent} />
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.showcase__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: 16px 32px;
+		max-width: none;
+	}
+
+	.showcase__header > div {
+		max-width: 780px;
+	}
+
+	.showcase {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	.showcase > li {
+		display: flex;
+	}
+
+	.showcase > li > :global(*) {
+		flex: 1;
+	}
+</style>

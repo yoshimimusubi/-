@@ -1,0 +1,2052 @@
+{
+	"$schema": "https://emdashcms.com/seed.schema.json",
+	"version": "1",
+	"meta": {
+		"name": "ヨシミムスビ公式サイト",
+		"description": "キャラクタープロジェクト「あっぷるぐみ」を運営するヨシミムスビの公式サイト（EmDash marketing テンプレートを拡張）",
+		"author": "ヨシミムスビ"
+	},
+	"settings": {
+		"title": "ヨシミムスビ",
+		"tagline": "ケアと暮らしを、キャラクターでむすぶ。",
+		"seo": {
+			"titleSeparator": "｜"
+		}
+	},
+	"blockTypes": [
+		{
+			"slug": "marketing_hero",
+			"label": "ヒーロー（ページ冒頭）",
+			"description": "ページ冒頭の大きな見出し（ボタン・画像つき）",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "subheadline",
+							"label": "説明文",
+							"type": "text"
+						},
+						{
+							"slug": "primary_cta_label",
+							"label": "メインボタンの文字",
+							"type": "string"
+						},
+						{
+							"slug": "primary_cta_url",
+							"label": "メインボタンのリンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "secondary_cta_label",
+							"label": "サブボタンの文字",
+							"type": "string"
+						},
+						{
+							"slug": "secondary_cta_url",
+							"label": "サブボタンのリンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "image",
+							"label": "画像",
+							"type": "image"
+						},
+						{
+							"slug": "image_caption",
+							"label": "画像のキャプション（写真の上に表示）",
+							"type": "string"
+						},
+						{
+							"slug": "eyebrow",
+							"label": "お知らせ（見出しの上に小さく表示）",
+							"type": "string"
+						},
+						{
+							"slug": "eyebrow_url",
+							"label": "お知らせのリンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|/(?!/|\\\\).*|(?:https?://|mailto:|tel:|#).+)$"
+							}
+						},
+						{
+							"slug": "centered",
+							"label": "中央そろえにする",
+							"type": "boolean",
+							"defaultValue": false
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_features",
+			"label": "特徴・サービス",
+			"description": "サービスや特徴をカードで並べる",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "subheadline",
+							"label": "続きの一文（見出しのあとに薄い色で表示）",
+							"type": "text"
+						},
+						{
+							"slug": "eyebrow",
+							"label": "見出しの上の小さなラベル",
+							"type": "string"
+						},
+						{
+							"slug": "features",
+							"label": "特徴・サービス",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "icon",
+										"label": "アイコン",
+										"type": "select",
+										"required": true,
+										"options": [
+											"zap",
+											"shield",
+											"users",
+											"chart",
+											"code",
+											"globe",
+											"heart",
+											"star",
+											"check",
+											"lock",
+											"clock",
+											"cloud",
+											"building",
+											"leaf",
+											"gauge",
+											"thermometer",
+											"plug",
+											"bell",
+											"file",
+											"sun",
+											"trend",
+											"chat",
+											"care",
+											"mic",
+											"game",
+											"shirt",
+											"robot",
+											"key",
+											"puzzle",
+											"refresh",
+											"smile"
+										]
+									},
+									{
+										"slug": "title",
+										"label": "タイトル",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "description",
+										"label": "説明（段落の間は 1 行あける）",
+										"type": "text",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_testimonials",
+			"label": "お客様の声",
+			"description": "お客様の声。最初の 1 件を大きく表示",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "コメントの上の小さな見出し",
+							"type": "string"
+						},
+						{
+							"slug": "testimonials",
+							"label": "お客様の声",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "quote",
+										"label": "コメント（段落の間は 1 行あける）",
+										"type": "text",
+										"required": true
+									},
+									{
+										"slug": "author",
+										"label": "名前",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "role",
+										"label": "役職",
+										"type": "string"
+									},
+									{
+										"slug": "company",
+										"label": "会社名",
+										"type": "string"
+									},
+									{
+										"slug": "avatar",
+										"label": "顔写真（空なら頭文字を表示）",
+										"type": "image"
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_pricing",
+			"label": "料金プラン",
+			"description": "最大 3 つの料金プランの比較",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "plans",
+							"label": "プラン",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 3,
+								"subFields": [
+									{
+										"slug": "name",
+										"label": "プラン名",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "price",
+										"label": "価格",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "period",
+										"label": "期間（例：／月）",
+										"type": "string"
+									},
+									{
+										"slug": "description",
+										"label": "説明（段落の間は 1 行あける）",
+										"type": "text"
+									},
+									{
+										"slug": "features",
+										"label": "含まれるもの（1 行に 1 項目）",
+										"type": "text"
+									},
+									{
+										"slug": "cta_label",
+										"label": "ボタンの文字",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "cta_url",
+										"label": "ボタンのリンク（/、https://、mailto:、tel:、# で始める）",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "highlighted",
+										"label": "このプランを強調する",
+										"type": "boolean"
+									},
+									{
+										"slug": "badge",
+										"label": "バッジの文字（例：人気）",
+										"type": "string"
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_faq",
+			"label": "よくある質問",
+			"description": "よくある質問の一覧",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "subheadline",
+							"label": "説明文",
+							"type": "text"
+						},
+						{
+							"slug": "items",
+							"label": "質問",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "question",
+										"label": "質問",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "answer",
+										"label": "回答（段落の間は 1 行あける）",
+										"type": "text",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_logos",
+			"label": "ロゴ一覧",
+			"description": "取引先・パートナーのロゴを流して見せる。ロゴがない名前は文字で表示",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "ロゴの上の小さな見出し",
+							"type": "string"
+						},
+						{
+							"slug": "logos",
+							"label": "ロゴ",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 24,
+								"subFields": [
+									{
+										"slug": "name",
+										"label": "会社名",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "logo",
+										"label": "ロゴ",
+										"type": "image"
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_split",
+			"label": "文章と画像",
+			"description": "写真の横に見出し・本文・チェックリスト",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "見出しの上の小さなラベル",
+							"type": "string"
+						},
+						{
+							"slug": "body",
+							"label": "本文（段落の間は 1 行あける）",
+							"type": "text"
+						},
+						{
+							"slug": "points",
+							"label": "チェックリスト（1 行に 1 項目）",
+							"type": "text"
+						},
+						{
+							"slug": "cta_label",
+							"label": "リンクの文字",
+							"type": "string"
+						},
+						{
+							"slug": "cta_url",
+							"label": "リンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|/(?!/|\\\\).*|(?:https?://|mailto:|tel:|#).+)$"
+							}
+						},
+						{
+							"slug": "image",
+							"label": "画像",
+							"type": "image"
+						},
+						{
+							"slug": "image_caption",
+							"label": "画像のキャプション（写真の上に表示）",
+							"type": "string"
+						},
+						{
+							"slug": "image_first",
+							"label": "画像を先に表示する",
+							"type": "boolean",
+							"defaultValue": false
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_stats",
+			"label": "数字",
+			"description": "数字で実績を見せる（濃い色の面）",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "subheadline",
+							"label": "続きの一文（見出しのあとに薄い色で表示）",
+							"type": "text"
+						},
+						{
+							"slug": "stats",
+							"label": "数字",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 6,
+								"subFields": [
+									{
+										"slug": "value",
+										"label": "数値",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "label",
+										"label": "ラベル",
+										"type": "string",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_cta",
+			"label": "締めの呼びかけ",
+			"description": "写真または濃い色の面に重ねる、締めの呼びかけ",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "body",
+							"label": "本文（段落の間は 1 行あける）",
+							"type": "text"
+						},
+						{
+							"slug": "primary_cta_label",
+							"label": "メインボタンの文字",
+							"type": "string"
+						},
+						{
+							"slug": "primary_cta_url",
+							"label": "メインボタンのリンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|/(?!/|\\\\).*|(?:https?://|mailto:|tel:|#).+)$"
+							}
+						},
+						{
+							"slug": "secondary_cta_label",
+							"label": "サブボタンの文字",
+							"type": "string"
+						},
+						{
+							"slug": "secondary_cta_url",
+							"label": "サブボタンのリンク（/、https://、mailto:、tel:、# で始める）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|/(?!/|\\\\).*|(?:https?://|mailto:|tel:|#).+)$"
+							}
+						},
+						{
+							"slug": "image",
+							"label": "背景画像",
+							"type": "image"
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_contact",
+			"label": "連絡先の案内",
+			"description": "連絡先（メール・電話・ページ）をカードで案内する",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "eyebrow",
+							"label": "見出しの上の小さなラベル",
+							"type": "string"
+						},
+						{
+							"slug": "subheadline",
+							"label": "説明文",
+							"type": "text"
+						},
+						{
+							"slug": "options",
+							"label": "連絡先の案内",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 6,
+								"subFields": [
+									{
+										"slug": "icon",
+										"label": "アイコン",
+										"type": "select",
+										"required": true,
+										"options": [
+											"email",
+											"support",
+											"sales",
+											"phone",
+											"chat",
+											"location"
+										]
+									},
+									{
+										"slug": "title",
+										"label": "タイトル",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "description",
+										"label": "説明（段落の間は 1 行あける）",
+										"type": "text"
+									},
+									{
+										"slug": "link_label",
+										"label": "リンクの文字",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "link_url",
+										"label": "リンク（/、https://、mailto:、tel:、# で始める）",
+										"type": "url",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "marketing_text",
+			"label": "文章",
+			"description": "見出し・箇条書き・リンクを含む長い文章（プライバシーポリシーなど）",
+			"category": "ページ部品",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "body",
+							"label": "本文",
+							"type": "portableText",
+							"required": true
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "talent_showcase",
+			"label": "メンバー紹介",
+			"description": "メンバー（タレント）コレクションから、表示順に並べて見せる",
+			"category": "ヨシミムスビ",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "見出しの上の小さなラベル",
+							"type": "string"
+						},
+						{
+							"slug": "subheadline",
+							"label": "説明文",
+							"type": "text"
+						},
+						{
+							"slug": "limit",
+							"label": "表示する人数（空ならすべて）",
+							"type": "integer"
+						},
+						{
+							"slug": "link_label",
+							"label": "一覧ページへのリンクの文字（空なら出さない）",
+							"type": "string"
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "news_list",
+			"label": "お知らせ一覧",
+			"description": "お知らせコレクションの新しい順に数件を並べる",
+			"category": "ヨシミムスビ",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "見出しの上の小さなラベル",
+							"type": "string"
+						},
+						{
+							"slug": "limit",
+							"label": "表示する件数（空なら 3 件）",
+							"type": "integer"
+						},
+						{
+							"slug": "link_label",
+							"label": "一覧ページへのリンクの文字（空なら出さない）",
+							"type": "string"
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "company_profile",
+			"label": "会社概要の表",
+			"description": "項目名と内容の組を表で見せる（社名・所在地など）",
+			"category": "ヨシミムスビ",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "見出し",
+							"type": "string"
+						},
+						{
+							"slug": "rows",
+							"label": "項目",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 20,
+								"subFields": [
+									{
+										"slug": "label",
+										"label": "項目名",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "value",
+										"label": "内容（改行するとそのまま改行）",
+										"type": "text",
+										"required": true
+									},
+									{
+										"slug": "url",
+										"label": "リンク（任意。/、https://、mailto:、tel: で始める）",
+										"type": "url"
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "セクション ID（英小文字。/#members のようなリンク用）",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"collections": [
+		{
+			"slug": "pages",
+			"label": "固定ページ",
+			"labelSingular": "固定ページ",
+			"urlPattern": "/{slug}",
+			"supports": [
+				"drafts",
+				"revisions",
+				"preview",
+				"seo"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "タイトル",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "content",
+					"label": "ページの中身",
+					"type": "blocks",
+					"validation": {
+						"allowedTypes": [
+							"marketing_hero",
+							"marketing_features",
+							"marketing_testimonials",
+							"marketing_pricing",
+							"marketing_faq",
+							"marketing_logos",
+							"marketing_split",
+							"marketing_stats",
+							"marketing_cta",
+							"marketing_contact",
+							"marketing_text",
+							"talent_showcase",
+							"news_list",
+							"company_profile"
+						],
+						"maxItems": 20
+					}
+				}
+			]
+		},
+		{
+			"slug": "talents",
+			"label": "メンバー",
+			"labelSingular": "メンバー",
+			"urlPattern": "/talents/{slug}",
+			"supports": [
+				"drafts",
+				"revisions",
+				"preview",
+				"seo",
+				"search"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "名前",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "name_kana",
+					"label": "よみがな",
+					"type": "string"
+				},
+				{
+					"slug": "name_en",
+					"label": "英字表記",
+					"type": "string"
+				},
+				{
+					"slug": "theme",
+					"label": "発信テーマ",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "catchphrase",
+					"label": "ひとこと（カードと個別ページの見出し下に表示）",
+					"type": "string",
+					"searchable": true
+				},
+				{
+					"slug": "summary",
+					"label": "紹介文（一覧・検索結果・AI 向け情報に使う短い文）",
+					"type": "text",
+					"searchable": true
+				},
+				{
+					"slug": "profile",
+					"label": "プロフィール本文",
+					"type": "portableText",
+					"searchable": true
+				},
+				{
+					"slug": "portrait",
+					"label": "立ち絵・アイコン画像",
+					"type": "image"
+				},
+				{
+					"slug": "color",
+					"label": "イメージカラー（# から始まる 6 桁。例：#d9708a）",
+					"type": "string",
+					"validation": {
+						"pattern": "^(?:$|#[0-9a-fA-F]{6})$"
+					}
+				},
+				{
+					"slug": "x_url",
+					"label": "X（旧 Twitter）の URL",
+					"type": "url"
+				},
+				{
+					"slug": "youtube_url",
+					"label": "YouTube の URL",
+					"type": "url"
+				},
+				{
+					"slug": "sort_order",
+					"label": "表示順（小さいほど先）",
+					"type": "integer"
+				}
+			]
+		},
+		{
+			"slug": "news",
+			"label": "お知らせ",
+			"labelSingular": "お知らせ",
+			"urlPattern": "/news/{slug}",
+			"supports": [
+				"drafts",
+				"revisions",
+				"preview",
+				"seo",
+				"search"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "タイトル",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "excerpt",
+					"label": "概要（一覧と検索結果に出る短い文）",
+					"type": "text",
+					"searchable": true
+				},
+				{
+					"slug": "featured_image",
+					"label": "アイキャッチ画像",
+					"type": "image"
+				},
+				{
+					"slug": "content",
+					"label": "本文",
+					"type": "portableText",
+					"searchable": true
+				}
+			]
+		}
+	],
+	"taxonomies": [
+		{
+			"name": "news_category",
+			"label": "お知らせの種類",
+			"labelSingular": "お知らせの種類",
+			"hierarchical": false,
+			"collections": [
+				"news"
+			],
+			"terms": [
+				{
+					"slug": "info",
+					"label": "お知らせ"
+				},
+				{
+					"slug": "event",
+					"label": "イベント・出演"
+				},
+				{
+					"slug": "goods",
+					"label": "グッズ"
+				},
+				{
+					"slug": "media",
+					"label": "メディア・タイアップ"
+				}
+			]
+		}
+	],
+	"menus": [
+		{
+			"name": "primary",
+			"label": "ヘッダー",
+			"items": [
+				{
+					"type": "custom",
+					"label": "メンバー",
+					"url": "/talents"
+				},
+				{
+					"type": "custom",
+					"label": "活動",
+					"url": "/#activities"
+				},
+				{
+					"type": "custom",
+					"label": "お知らせ",
+					"url": "/news"
+				},
+				{
+					"type": "custom",
+					"label": "会社概要",
+					"url": "/company"
+				},
+				{
+					"type": "custom",
+					"label": "お問い合わせ",
+					"url": "/contact",
+					"cssClasses": "button"
+				}
+			]
+		},
+		{
+			"name": "footer_members",
+			"label": "あっぷるぐみ",
+			"items": [
+				{
+					"type": "custom",
+					"label": "メンバー一覧",
+					"url": "/talents"
+				},
+				{
+					"type": "custom",
+					"label": "発信で大切にしていること",
+					"url": "/#policy"
+				},
+				{
+					"type": "custom",
+					"label": "お知らせ",
+					"url": "/news"
+				}
+			]
+		},
+		{
+			"name": "footer_company",
+			"label": "ヨシミムスビ",
+			"items": [
+				{
+					"type": "custom",
+					"label": "活動",
+					"url": "/#activities"
+				},
+				{
+					"type": "custom",
+					"label": "会社概要",
+					"url": "/company"
+				},
+				{
+					"type": "custom",
+					"label": "お問い合わせ",
+					"url": "/contact"
+				}
+			]
+		},
+		{
+			"name": "footer_site",
+			"label": "このサイトについて",
+			"items": [
+				{
+					"type": "custom",
+					"label": "このサイトの仕組み",
+					"url": "/ai-native"
+				},
+				{
+					"type": "custom",
+					"label": "AI 向けサイト情報（llms.txt）",
+					"url": "/llms.txt"
+				},
+				{
+					"type": "custom",
+					"label": "お知らせの RSS",
+					"url": "/rss.xml"
+				}
+			]
+		}
+	],
+	"content": {
+		"pages": [
+			{
+				"id": "home",
+				"slug": "home",
+				"status": "published",
+				"data": {
+					"title": "ホーム",
+					"content": [
+						{
+							"_type": "marketing_hero",
+							"_version": 1,
+							"_key": "hero",
+							"eyebrow": "公式サイトをリニューアルしました",
+							"eyebrow_url": "/news/site-renewal",
+							"headline": "ケアと暮らしに、やさしい声を。",
+							"subheadline": "ヨシミムスビは、看護・介護・健康・美容をテーマに発信するキャラクタープロジェクト「あっぷるぐみ」を運営しています。現場で働く人と、毎日を支える人に向けて、肩の力が抜ける言葉と、確かめながら使える小さな知識を届けます。",
+							"primary_cta_label": "メンバーを見る",
+							"primary_cta_url": "/talents",
+							"secondary_cta_label": "お仕事のご相談",
+							"secondary_cta_url": "/contact"
+						},
+						{
+							"_type": "talent_showcase",
+							"_version": 1,
+							"_key": "members",
+							"anchor_id": "members",
+							"eyebrow": "あっぷるぐみ",
+							"headline": "5 人のメンバー",
+							"subheadline": "それぞれの得意分野から、毎日の発信を続けています。",
+							"link_label": "メンバー一覧へ"
+						},
+						{
+							"_type": "marketing_features",
+							"_version": 1,
+							"_key": "activities",
+							"anchor_id": "activities",
+							"eyebrow": "活動",
+							"headline": "キャラクターだから、届く言葉がある。",
+							"subheadline": "ヨシミムスビの主な活動です。",
+							"features": [
+								{
+									"icon": "chat",
+									"title": "SNS・配信での情報発信",
+									"description": "X や YouTube で、朝のあいさつから健康にまつわる小さな知識まで、毎日の発信を続けています。"
+								},
+								{
+									"icon": "care",
+									"title": "医療・介護の現場へのエール",
+									"description": "看護師、介護職、福祉の現場で働く人に向けて、ねぎらいと共感を届けます。"
+								},
+								{
+									"icon": "building",
+									"title": "企業・団体とのタイアップ",
+									"description": "商品やサービス、啓発活動の紹介を、メンバーのテーマと世界観に合わせて企画します。"
+								},
+								{
+									"icon": "game",
+									"title": "イベント・配信のキャスティング",
+									"description": "ゲームイベントや配信企画に合わせて、出演する VTuber の選定から依頼の調整までを行います。"
+								},
+								{
+									"icon": "shirt",
+									"title": "グッズ・コンテンツ制作",
+									"description": "プリントグッズなど、キャラクターを使ったコンテンツを企画・制作します。"
+								},
+								{
+									"icon": "robot",
+									"title": "AI を取り入れた運営",
+									"description": "音声合成や AI エージェントを取り入れ、少人数でも発信の質と量を保てる体制をつくっています。"
+								}
+							]
+						},
+						{
+							"_type": "marketing_split",
+							"_version": 1,
+							"_key": "policy",
+							"anchor_id": "policy",
+							"eyebrow": "発信で大切にしていること",
+							"headline": "寄り添うけれど、言い切らない。",
+							"body": "医療や健康の話題は、ひとりひとり事情が違います。だからわたしたちは、相手の言葉をよく読んでから返し、診断や効果を断定しないことを決めています。\n\nキャラクターの明るさと、情報への慎重さ。その両方を大事にしています。",
+							"points": "診断・治療・効果を言い切らない\n現場で働く人への敬意をいちばんに置く\n宣伝よりも、相手との会話を大切にする\n同じ言葉を使い回さず、一件ずつ考えて返す",
+							"cta_label": "メンバーを見る",
+							"cta_url": "/talents"
+						},
+						{
+							"_type": "news_list",
+							"_version": 1,
+							"_key": "news",
+							"anchor_id": "news",
+							"eyebrow": "お知らせ",
+							"headline": "最新のお知らせ",
+							"limit": 3,
+							"link_label": "お知らせ一覧へ"
+						},
+						{
+							"_type": "marketing_faq",
+							"_version": 1,
+							"_key": "faq",
+							"anchor_id": "faq",
+							"headline": "よくあるご質問",
+							"items": [
+								{
+									"question": "お仕事の相談はどこからできますか？",
+									"answer": "お問い合わせページからご連絡ください。内容を確認のうえ、担当よりご返信します。"
+								},
+								{
+									"question": "医療や健康について、個別に相談できますか？",
+									"answer": "個別の診断や治療についてのご相談はお受けしていません。\n\n体調や症状のご心配は、かかりつけの医療機関や専門の相談窓口にご相談ください。"
+								},
+								{
+									"question": "メンバーに応援メッセージを送りたいです。",
+									"answer": "各メンバーの X へのリプライや、配信のコメントでお寄せください。ひとつひとつ大切に読んでいます。"
+								}
+							]
+						},
+						{
+							"_type": "marketing_cta",
+							"_version": 1,
+							"_key": "cta",
+							"headline": "いっしょに、やさしい発信を。",
+							"body": "タイアップ、出演のご依頼、取材など、お気軽にご相談ください。",
+							"primary_cta_label": "お問い合わせ",
+							"primary_cta_url": "/contact",
+							"secondary_cta_label": "会社概要",
+							"secondary_cta_url": "/company"
+						}
+					]
+				}
+			},
+			{
+				"id": "talents",
+				"slug": "talents",
+				"status": "published",
+				"data": {
+					"title": "メンバー",
+					"content": [
+						{
+							"_type": "talent_showcase",
+							"_version": 1,
+							"_key": "members",
+							"eyebrow": "あっぷるぐみ",
+							"headline": "看護・介護・健康・美容。",
+							"subheadline": "それぞれの得意分野から発信する 5 人です。"
+						},
+						{
+							"_type": "marketing_cta",
+							"_version": 1,
+							"_key": "cta",
+							"headline": "メンバーへのご依頼・ご相談",
+							"body": "タイアップや出演のご依頼は、お問い合わせページから承ります。",
+							"primary_cta_label": "お問い合わせ",
+							"primary_cta_url": "/contact"
+						}
+					]
+				}
+			},
+			{
+				"id": "company",
+				"slug": "company",
+				"status": "published",
+				"data": {
+					"title": "会社概要",
+					"content": [
+						{
+							"_type": "marketing_hero",
+							"_version": 1,
+							"_key": "hero",
+							"centered": true,
+							"headline": "会社概要",
+							"subheadline": "キャラクターを通じて、ケアの現場と暮らしをむすぶ会社です。"
+						},
+						{
+							"_type": "company_profile",
+							"_version": 1,
+							"_key": "profile",
+							"rows": [
+								{
+									"label": "社名",
+									"value": "ヨシミムスビ【正式名称を記入】"
+								},
+								{
+									"label": "代表者",
+									"value": "【記入してください】"
+								},
+								{
+									"label": "設立",
+									"value": "【記入してください】"
+								},
+								{
+									"label": "所在地",
+									"value": "【記入してください】"
+								},
+								{
+									"label": "事業内容",
+									"value": "キャラクタープロジェクト「あっぷるぐみ」の企画・運営\nVTuber・キャラクターを活用した情報発信、タイアップの企画\nイベント・配信のキャスティング\nキャラクターグッズ・コンテンツの企画・制作"
+								},
+								{
+									"label": "お問い合わせ",
+									"value": "お問い合わせページから",
+									"url": "/contact"
+								}
+							]
+						},
+						{
+							"_type": "marketing_cta",
+							"_version": 1,
+							"_key": "cta",
+							"headline": "ご相談をお待ちしています。",
+							"body": "タイアップ、出演のご依頼、取材など、お気軽にお問い合わせください。",
+							"primary_cta_label": "お問い合わせ",
+							"primary_cta_url": "/contact",
+							"secondary_cta_label": "メンバーを見る",
+							"secondary_cta_url": "/talents"
+						}
+					]
+				}
+			},
+			{
+				"id": "contact",
+				"slug": "contact",
+				"status": "published",
+				"data": {
+					"title": "お問い合わせ",
+					"content": [
+						{
+							"_type": "marketing_hero",
+							"_version": 1,
+							"_key": "hero",
+							"centered": true,
+							"headline": "お問い合わせ",
+							"subheadline": "タイアップ・出演のご依頼、取材、そのほかのご相談はこちらから。内容を確認のうえ、担当よりご連絡します。"
+						},
+						{
+							"_type": "marketing_contact",
+							"_version": 1,
+							"_key": "options",
+							"options": [
+								{
+									"icon": "email",
+									"title": "お仕事のご相談",
+									"description": "タイアップ、イベント・配信への出演依頼、取材など。",
+									"link_label": "メールで相談する",
+									"link_url": "mailto:contact@example.com"
+								},
+								{
+									"icon": "chat",
+									"title": "メンバーへのメッセージ",
+									"description": "応援メッセージは、各メンバーの X や配信のコメントへどうぞ。",
+									"link_label": "メンバー一覧へ",
+									"link_url": "/talents"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "ai-native",
+				"slug": "ai-native",
+				"status": "published",
+				"data": {
+					"title": "このサイトの仕組み",
+					"content": [
+						{
+							"_type": "marketing_hero",
+							"_version": 1,
+							"_key": "hero",
+							"centered": true,
+							"eyebrow": "このサイトの仕組み",
+							"headline": "AI と人が、同じ入口から更新するサイト。",
+							"subheadline": "このサイトは、Cloudflare が開発したオープンソースの CMS「EmDash」で動いています。管理画面から人が編集するのと同じように、AI エージェントもサイトを読み書きできます。"
+						},
+						{
+							"_type": "marketing_features",
+							"_version": 1,
+							"_key": "design",
+							"anchor_id": "design",
+							"headline": "このサイトのつくり",
+							"subheadline": "ふだんの更新は AI に頼み、最後の確認は人が行います。",
+							"features": [
+								{
+									"icon": "robot",
+									"title": "AI が直接さわれる",
+									"description": "お知らせの作成、画像の登録、メニューの変更まで、MCP という共通の窓口を通じて AI エージェントにチャットで頼めます。"
+								},
+								{
+									"icon": "users",
+									"title": "人もいつもどおり編集できる",
+									"description": "WordPress に近い管理画面があり、AI がつくった内容の確認や細かな手直しは人が行います。"
+								},
+								{
+									"icon": "file",
+									"title": "読みやすい構造化データ",
+									"description": "プロフィールや本文を項目ごとのデータで持つため、AI にも検索エンジンにも内容が正確に伝わります。"
+								},
+								{
+									"icon": "cloud",
+									"title": "サーバーを持たない",
+									"description": "Cloudflare の世界中に分散した基盤で動くので、サーバーの契約や PHP・OS の更新作業がいりません。"
+								},
+								{
+									"icon": "key",
+									"title": "パスキーでログイン",
+									"description": "管理画面へはパスワードではなく、指紋や顔認証などのパスキーでログインします。"
+								},
+								{
+									"icon": "puzzle",
+									"title": "拡張機能を隔離できる",
+									"description": "プラグインを本体から切り離して動かせるので、ひとつの不具合がサイト全体に広がりにくい設計です。"
+								}
+							]
+						},
+						{
+							"_type": "marketing_text",
+							"_version": 1,
+							"_key": "compare",
+							"anchor_id": "compare",
+							"headline": "WordPress との違い",
+							"body": [
+								{
+									"_type": "block",
+									"_key": "b2",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s1",
+											"text": "これまで多くのサイトで使われてきた WordPress と比べると、次のような違いがあります。",
+											"marks": []
+										}
+									]
+								},
+								{
+									"_type": "block",
+									"_key": "b4",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s3",
+											"text": "設計の前提：2003 年ごろの Web → AI エージェントがいる今の Web",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b6",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s5",
+											"text": "動かす場所：レンタルサーバー → Cloudflare の分散基盤（サーバーレス）",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b8",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s7",
+											"text": "使っている技術：PHP → TypeScript と Astro",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b10",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s9",
+											"text": "本文の持ち方：HTML のかたまり → 項目ごとの構造化データ",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b12",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s11",
+											"text": "拡張機能（プラグイン）：本体と同じ場所で動く → 本体から隔離して動かせる",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b14",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s13",
+											"text": "AI との連携：プラグインで後から足す → MCP を最初から搭載",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b16",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s15",
+											"text": "保守：本体・テーマ・プラグイン・PHP・サーバーを自分で更新 → 更新作業がほとんどいらない",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b18",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s17",
+											"text": "拡張機能の数：数万件 → まだ少ない（必要なものは AI と一緒に作る）",
+											"marks": []
+										}
+									],
+									"listItem": "bullet",
+									"level": 1
+								},
+								{
+									"_type": "block",
+									"_key": "b20",
+									"style": "normal",
+									"markDefs": [],
+									"children": [
+										{
+											"_type": "span",
+											"_key": "s19",
+											"text": "WordPress のテーマやプラグインの豊富さ、情報の多さには、まだ及びません。そのぶん、必要なデザインや機能は AI エージェントと一緒に作っていきます。",
+											"marks": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"_type": "marketing_split",
+							"_version": 1,
+							"_key": "workflow",
+							"anchor_id": "workflow",
+							"eyebrow": "ふだんの更新",
+							"headline": "スマホに話しかけて、サイトを更新する。",
+							"body": "たとえば「配信の告知をお知らせに追加して。URL はこれ」と AI に伝えるだけで、本文の下書き、画像の登録、公開日時の設定までが進みます。\n\n公開する前に、人が管理画面で内容を確かめます。",
+							"points": "お知らせの追加と予約投稿\nメンバー紹介の更新\nメニューやページ構成の変更\nお問い合わせフォームの作成"
+						},
+						{
+							"_type": "marketing_faq",
+							"_version": 1,
+							"_key": "faq",
+							"anchor_id": "faq",
+							"headline": "よくあるご質問",
+							"items": [
+								{
+									"question": "AI が勝手に内容を公開することはありますか？",
+									"answer": "AI が操作するには、管理者が許可したアカウントでのログインが必要です。公開前の確認は人が行っています。"
+								},
+								{
+									"question": "サイトの運用にどのくらい費用がかかりますか？",
+									"answer": "小規模なサイトであれば、Cloudflare の無料枠で運用できる設計です。アクセスが大きく増えた場合は有料プランを検討します。"
+								},
+								{
+									"question": "このサイトの内容を AI に読み込ませてもいいですか？",
+									"answer": "はい。AI 向けに要点をまとめた /llms.txt を用意しています。\n\n内容はサイトのデータから自動で作られるので、いつも最新です。"
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"talents": [
+			{
+				"id": "hakui-yui",
+				"slug": "hakui-yui",
+				"status": "published",
+				"data": {
+					"title": "白衣ゆい",
+					"theme": "看護師・医療職・健康",
+					"color": "#4a9cc7",
+					"sort_order": 10,
+					"catchphrase": "【ひとことを記入】",
+					"summary": "看護師や医療職として働く人に向けて、ねぎらいと健康の話題を届けるメンバー。",
+					"profile": [
+						{
+							"_type": "block",
+							"_key": "b33",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s32",
+									"text": "夜勤明けの一息や、忙しい日のちょっとした工夫など、医療の現場で働く人の毎日に寄り添う発信をしています。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b35",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s34",
+									"text": "健康の話題は「人によって違う」ことを前提に、言い切らず、やわらかく伝えることを大切にしています。",
+									"marks": []
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "mimori-ume",
+				"slug": "mimori-ume",
+				"status": "published",
+				"data": {
+					"title": "みもり うめ",
+					"name_kana": "みもり うめ",
+					"theme": "朝のあいさつ・メンタルケア・セルフケア",
+					"color": "#d9708a",
+					"sort_order": 20,
+					"catchphrase": "【ひとことを記入】",
+					"summary": "毎朝のあいさつから一日を始めるメンバー。がんばりすぎない毎日のための、小さなセルフケアを話題にしています。",
+					"profile": [
+						{
+							"_type": "block",
+							"_key": "b37",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s36",
+									"text": "「おはよう」の投稿から一日を始めます。届いた返事を一つずつ読んで、その日の気分に合った言葉を返しています。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b39",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s38",
+									"text": "気持ちが疲れたときのセルフケアなど、無理なく続けられることを、押しつけずに紹介しています。",
+									"marks": []
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "kocho-kurono",
+				"slug": "kocho-kurono",
+				"status": "published",
+				"data": {
+					"title": "胡蝶くろの",
+					"name_kana": "こちょう くろの",
+					"theme": "医療・看護・健康リテラシー",
+					"color": "#5b4a8b",
+					"x_url": "https://x.com/kocho_kurono",
+					"sort_order": 30,
+					"catchphrase": "【ひとことを記入】",
+					"summary": "落ち着いた語り口で、医療や看護、健康情報との付き合い方を話題にするメンバー。",
+					"profile": [
+						{
+							"_type": "block",
+							"_key": "b41",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s40",
+									"text": "医療や看護にまつわる話題を、知的で落ち着いたトーンで取り上げています。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b43",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s42",
+									"text": "あふれる健康情報とどう付き合うか。確かめながら考える姿勢を大切にしています。",
+									"marks": []
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "ukamoto-marino",
+				"slug": "ukamoto-marino",
+				"status": "published",
+				"data": {
+					"title": "宇迦元まりの",
+					"name_kana": "うかもと まりの",
+					"theme": "美容・健康・生活習慣",
+					"color": "#d98a3d",
+					"x_url": "https://x.com/ukamoto_marino",
+					"sort_order": 40,
+					"catchphrase": "【ひとことを記入】",
+					"summary": "美容と健康、毎日の生活習慣を、無理なく続けられる目線で話題にするメンバー。",
+					"profile": [
+						{
+							"_type": "block",
+							"_key": "b45",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s44",
+									"text": "スキンケアや睡眠、食事など、毎日の暮らしにある美容と健康の話題を取り上げています。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b47",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s46",
+									"text": "「続けられること」を大事に、自分に合うやり方を見つけるヒントを届けます。",
+									"marks": []
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "chloe-folium",
+				"slug": "chloe-folium",
+				"status": "published",
+				"data": {
+					"title": "クロエ・フォリウム",
+					"name_kana": "くろえ・ふぉりうむ",
+					"theme": "介護・福祉",
+					"color": "#4f8a5b",
+					"sort_order": 50,
+					"catchphrase": "【ひとことを記入】",
+					"summary": "介護や福祉の現場で働く人への敬意を大切に、日々の頑張りに寄り添うメンバー。",
+					"profile": [
+						{
+							"_type": "block",
+							"_key": "b49",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s48",
+									"text": "介護や福祉の現場で働く人の声に耳を傾け、日々の頑張りに敬意を込めて言葉を返しています。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b51",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s50",
+									"text": "助言よりも共感を。現場を知る人の言葉を、いちばん大事にしています。",
+									"marks": []
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"news": [
+			{
+				"id": "site-renewal",
+				"slug": "site-renewal",
+				"status": "published",
+				"data": {
+					"title": "公式サイトをリニューアルしました",
+					"excerpt": "AI ネイティブな CMS「EmDash」で、公式サイトを新しくしました。メンバー紹介とお知らせを、これまでより早くお届けします。",
+					"content": [
+						{
+							"_type": "block",
+							"_key": "b22",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s21",
+									"text": "ヨシミムスビの公式サイトをリニューアルしました。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b24",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s23",
+									"text": "新しいサイトでは、あっぷるぐみのメンバー紹介ページを一人ずつ用意し、お知らせもまとめて読めるようになりました。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b29",
+							"style": "normal",
+							"markDefs": [
+								{
+									"_type": "link",
+									"_key": "l26",
+									"href": "/ai-native"
+								}
+							],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s25",
+									"text": "サイトの仕組みには、Cloudflare のオープンソース CMS「EmDash」を採用しています。AI エージェントと人が同じ管理画面から更新できるので、配信やイベントのお知らせを、これまでより早くお届けできます。くわしくは「",
+									"marks": []
+								},
+								{
+									"_type": "span",
+									"_key": "s27",
+									"text": "このサイトの仕組み",
+									"marks": [
+										"l26"
+									]
+								},
+								{
+									"_type": "span",
+									"_key": "s28",
+									"text": "」をご覧ください。",
+									"marks": []
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "b31",
+							"style": "normal",
+							"markDefs": [],
+							"children": [
+								{
+									"_type": "span",
+									"_key": "s30",
+									"text": "これからも、あっぷるぐみをよろしくお願いします。",
+									"marks": []
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": {
+					"news_category": [
+						"info"
+					]
+				}
+			}
+		]
+	}
+}

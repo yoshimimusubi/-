@@ -1,0 +1,273 @@
+---
+import { Icon } from "astro-iconset/components";
+import { decodeSlug, getEmDashCollection, getEmDashEntry, getSeoMeta } from "emdash";
+import { Image } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import Prose from "../../components/Prose.astro";
+import TalentCard from "../../components/TalentCard.astro";
+import { safeExternalUrl, talentColor, talentInitial } from "../../utils/talent";
+
+const slug = decodeSlug(Astro.params.slug);
+if (!slug) return Astro.rewrite("/404");
+
+const { entry: talent, error, cacheHint } = await getEmDashEntry("talents", slug);
+if (error) return new Response("メンバー情報を読み込めませんでした", { status: 500 });
+if (!talent) return Astro.rewrite("/404");
+
+const others = await getEmDashCollection("talents", {
+	orderBy: { sort_order: "asc", published_at: "asc" },
+});
+const otherTalents = others.entries.filter((entry) => entry.id !== talent.id);
+
+if (Astro.cache?.enabled) {
+	Astro.cache.set(cacheHint);
+	Astro.cache.set(others.cacheHint);
+}
+
+const { title, name_kana, name_en, theme, catchphrase, summary, profile, portrait, color } =
+	talent.data;
+const xUrl = safeExternalUrl(talent.data.x_url);
+const youtubeUrl = safeExternalUrl(talent.data.youtube_url);
+
+const seo = getSeoMeta(talent, {
+	siteUrl: Astro.url.origin,
+	path: `/talents/${talent.id}`,
+	defaultDescription: summary,
+	defaultOgImage: portrait?.src,
+});
+---
+
+<Base
+	title={seo.title}
+	pageTitle={title}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	content={{ collection: "talents", id: talent.data.id, slug: talent.id }}
+>
+	<article style={`--talent-color: ${talentColor(color)}`}>
+		<section class="sheet talent-hero">
+			<div class="container talent-hero__grid">
+				<div class="talent-hero__visual" aria-hidden={portrait ? undefined : "true"}>
+					{
+						portrait ? (
+							<div class="media talent-hero__portrait">
+								<div class="media__img" {...talent.edit.portrait}>
+									<Image image={portrait} priority />
+								</div>
+							</div>
+						) : (
+							<span class="talent-hero__initial">{talentInitial(title)}</span>
+						)
+					}
+				</div>
+				<div class="talent-hero__text">
+					<p class="talent-hero__theme" {...talent.edit.theme}>{theme}</p>
+					<h1 class="display talent-hero__name" {...talent.edit.title}>{title}</h1>
+					{
+						(name_kana || name_en) && (
+							<p class="talent-hero__reading">
+								{[name_kana, name_en].filter(Boolean).join(" / ")}
+							</p>
+						)
+					}
+					{
+						catchphrase && (
+							<p class="talent-hero__catch" {...talent.edit.catchphrase}>
+								{catchphrase}
+							</p>
+						)
+					}
+					{
+						summary && (
+							<p class="lead talent-hero__summary" {...talent.edit.summary}>
+								{summary}
+							</p>
+						)
+					}
+					{
+						(xUrl || youtubeUrl) && (
+							<div class="actions talent-hero__links">
+								{xUrl && (
+									<a href={xUrl} class="btn" target="_blank" rel="noopener noreferrer">
+										<Icon name="ph:x-logo" aria-hidden="true" />X をフォロー
+									</a>
+								)}
+								{youtubeUrl && (
+									<a
+										href={youtubeUrl}
+										class="btn btn-secondary"
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										<Icon name="ph:youtube-logo" aria-hidden="true" />
+										YouTube を見る
+									</a>
+								)}
+							</div>
+						)
+					}
+				</div>
+			</div>
+		</section>
+
+		{
+			profile && profile.length > 0 && (
+				<section class="container section">
+					<h2 class="section-headline talent-profile__headline">プロフィール</h2>
+					<Prose value={profile} edit={talent.edit.profile} />
+				</section>
+			)
+		}
+	</article>
+
+	{
+		otherTalents.length > 0 && (
+			<section class="container section">
+				<header class="section-header">
+					<p class="eyebrow">あっぷるぐみ</p>
+					<h2 class="section-headline">ほかのメンバー</h2>
+				</header>
+				<ul class="talent-others" role="list">
+					{otherTalents.map((other) => (
+						<li>
+							<TalentCard talent={other} />
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
+</Base>
+
+<style>
+	.talent-hero {
+		margin-block-start: 16px;
+		background:
+			radial-gradient(
+				70% 90% at 90% 0%,
+				color-mix(in srgb, var(--talent-color) 30%, transparent),
+				transparent 70%
+			),
+			color-mix(in srgb, var(--talent-color) 9%, var(--color-sunken));
+	}
+
+	.talent-hero__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		gap: clamp(32px, 5vw, 80px);
+		align-items: center;
+		padding-block: clamp(48px, 7vw, 104px);
+	}
+
+	.talent-hero__visual {
+		display: grid;
+		place-items: center;
+		aspect-ratio: 1;
+		border-radius: var(--radius-media);
+		background: color-mix(in srgb, var(--talent-color) 16%, var(--color-surface));
+	}
+
+	.talent-hero__portrait {
+		width: 100%;
+		height: 100%;
+	}
+
+	.talent-hero__initial {
+		display: grid;
+		place-items: center;
+		width: 58%;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--talent-color);
+		color: #fff;
+		font-family: var(--font-display);
+		font-size: clamp(72px, 11vw, 160px);
+		font-weight: 700;
+		line-height: 1;
+		box-shadow: 0 24px 60px -24px color-mix(in srgb, var(--talent-color) 80%, transparent);
+	}
+
+	.talent-hero__text {
+		display: grid;
+		gap: 14px;
+		justify-items: start;
+	}
+
+	.talent-hero__theme {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 14px;
+		border-radius: var(--radius-full);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.talent-hero__theme::before {
+		content: "";
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--talent-color);
+	}
+
+	.talent-hero__name {
+		font-size: clamp(40px, 6vw, 72px);
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+
+	.talent-hero__reading {
+		font-size: 14px;
+		letter-spacing: 0.1em;
+		color: var(--color-muted);
+	}
+
+	.talent-hero__catch {
+		font-family: var(--font-display);
+		font-size: clamp(20px, 2.2vw, 26px);
+		line-height: 1.6;
+	}
+
+	.talent-hero__links {
+		margin-top: 8px;
+	}
+
+	.talent-hero__links :global(svg) {
+		font-size: 17px;
+	}
+
+	.talent-profile__headline {
+		margin-block-end: 28px;
+	}
+
+	.talent-others {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	.talent-others > li {
+		display: flex;
+	}
+
+	.talent-others > li > :global(*) {
+		flex: 1;
+	}
+
+	@media (max-width: 860px) {
+		.talent-hero__grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.talent-hero__visual {
+			max-width: 420px;
+			width: 100%;
+			margin-inline: auto;
+		}
+	}
+</style>
