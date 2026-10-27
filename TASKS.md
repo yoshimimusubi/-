@@ -12,6 +12,6 @@ PC・スマホ・クラウドの Claude Code セッションで共有するタ�
 | ID | タイトル | 状態 | 実行場所 | 最終更新 | 次の一手 |
 |---|---|---|---|---|---|
 | T-20260927-01 | PC⇔スマホ タスク相互管理のセットアップ | waiting | Cloud | 2026-09-27 15:40 | PC で `docs/task-sync/PC_SETUP_PROMPT.md` のプロンプトを実行（本人） |
-| T-20261025-01 | EmDash（Cloudflare 製 CMS）で新サイト立ち上げ | waiting | Cloud | 2026-10-25 17:50 | 用途・雛形・サイト名・ドメインを決め、Cloudflare アカウントを作成 → PC で `docs/emdash/PC_SETUP_PROMPT.md` のプロンプトを実行（本人） |
+| T-20261025-01 | EmDash（Cloudflare 製 CMS）で新サイト立ち上げ | doing | Cloud | 2026-10-27 22:04 | ヨシミムスビ公式サイトのリニューアル版を EmDash で試作中（`yoshimi-site/`） |
 
 ## Archive
