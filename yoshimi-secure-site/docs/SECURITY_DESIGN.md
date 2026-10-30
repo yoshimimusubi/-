@@ -34,6 +34,8 @@
 | WAF を迂回する別の入口 | `*.workers.dev` などの URL が生きている | `workers_dev: false`・`preview_urls: false` | `wrangler.jsonc` |
 | なりすましアカウント・フィッシング | 公式アカウントがどれか分からない | 公式アカウント一覧を公開（会社概要・セキュリティのページ）、プロフィールに `rel="me"`、「DM でお金を求めない」と明記 | `src/pages/security.astro` |
 | AI エージェント経由の改変（プロンプトインジェクション） | AI に公開サイトへの書き込み権限を渡している | 公開サイトに AI 用の書き込み口（MCP など）を置かない。AI の変更も PR で人が確認し、スキーマとビルドチェックを通す | README |
+| 画像から位置情報・撮影機材などが漏れる | 写真の EXIF をそのまま公開 | 画像は `src/assets/` に置き、ビルド時に AVIF・WebP へ作り直す。この過程で位置情報などのメタデータは消える（GPS 入りの画像で確認済み）。外部サイトの画像の直接読み込みはビルドで止める | `src/pages/index.astro`、`scripts/verify-dist.mjs` |
+| 生成 AI の画像が実在の人・現場と誤解される | 注記なしで掲載 | 生成 AI の画像には「写真はイメージです（生成 AI で作成）」と添える。医療職の姿が写る画像を実際のスタッフのように見せない | `src/pages/index.astro` |
 | 脆弱性を見つけた人の連絡先がない | 窓口なし | `/.well-known/security.txt`（RFC 9116）と報告の方針を公開。期限切れはビルドで検知 | `public/.well-known/security.txt`、`scripts/verify-dist.mjs` |
 
 ## HTTP ヘッダー

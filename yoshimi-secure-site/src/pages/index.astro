@@ -1,4 +1,6 @@
 ---
+import { Picture } from "astro:assets";
+import genbaAndCreators from "../assets/images/genba-and-creators.jpg";
 import CallToAction from "../components/CallToAction.astro";
 import Icon, { type IconName } from "../components/Icon.astro";
 import MemberCard from "../components/MemberCard.astro";
@@ -156,6 +158,31 @@ const structuredData = [
           ))
         }
       </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="story-title">
+    <div class="wrap story">
+      <figure class="story__figure">
+        <Picture
+          src={genbaAndCreators}
+          formats={["avif", "webp"]}
+          widths={[384, genbaAndCreators.width]}
+          sizes="(min-width: 900px) 520px, calc(100vw - 32px)"
+          alt="明るいオフィスで、看護師や医師の服装の人とクリエイターが机を囲み、画面のキャラクターを見ながら話し合っている様子"
+          loading="lazy"
+        />
+        <figcaption>写真はイメージです（生成 AI で作成）</figcaption>
+      </figure>
+      <div>
+        <SectionHead id="story-title" eyebrow="わたしたちのつくり方" title="現場の声から、キャラクターのことばを。" />
+        <div class="prose">
+          <p>
+            SNS に届く看護・介護の現場の声を一つずつ読み、キャラクターの言葉や企画に生かしています。
+          </p>
+          <p>企画、デザイン、配信、AI の技術。立場の違う人が同じテーブルを囲んで、ひとつの発信をつくっています。</p>
+        </div>
+      </div>
     </div>
   </section>
 

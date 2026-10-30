@@ -879,6 +879,45 @@ mark.todo {
   background: var(--surface);
 }
 
+/* ---------- つくり方（画像と文章） ---------- */
+
+.story {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .story {
+    grid-template-columns: minmax(0, 520px) 1fr;
+    gap: 64px;
+  }
+}
+
+.story__figure {
+  margin: 0;
+}
+
+.story__figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 512 / 286;
+  object-fit: cover;
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow);
+}
+
+.story__figure figcaption {
+  margin-top: 10px;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.story .section-head {
+  margin-bottom: 20px;
+}
+
 /* ---------- 方針（左右分割） ---------- */
 
 .split {

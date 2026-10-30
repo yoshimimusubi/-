@@ -47,6 +47,9 @@ for (const file of htmlFiles) {
   }
   for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
     if (!/\salt="/.test(tag)) fail(`alt のない <img>: ${tag}`);
+    // 幅と高さがないと、読み込み時にレイアウトがずれる（CLS）
+    if (!/\swidth="\d+"/.test(tag) || !/\sheight="\d+"/.test(tag)) fail(`width・height のない <img>: ${tag}`);
+    if (/\ssrc="https?:\/\//.test(tag)) fail(`外部サイトの画像を直接読み込んでいる: ${tag}`);
   }
 }
 
