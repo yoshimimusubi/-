@@ -1,0 +1,26 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Apple from "./Apple.astro";
+import Icon from "./Icon.astro";
+
+interface Props {
+  member: CollectionEntry<"members">;
+  headingLevel?: 2 | 3;
+}
+const { member, headingLevel = 3 } = Astro.props;
+const { name, kana, themes, summary, color } = member.data;
+const Heading = `h${headingLevel}` as "h2" | "h3";
+---
+
+<article class="member-card" data-member={member.id}>
+  <Apple name={name} color={color} size={88} class="member-card__apple" />
+  <Heading class="member-card__name">
+    <a href={`/members/${member.id}/`}>{name}</a>
+  </Heading>
+  {kana && kana !== name && <p class="member-card__kana">{kana}</p>}
+  <ul class="tags" aria-label="発信テーマ">
+    {themes.map((theme) => <li>{theme}</li>)}
+  </ul>
+  <p class="member-card__summary">{summary}</p>
+  <span class="member-card__more" aria-hidden="true">プロフィール <Icon name="arrow" size={16} /></span>
+</article>

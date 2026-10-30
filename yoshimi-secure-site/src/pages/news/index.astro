@@ -1,0 +1,19 @@
+---
+import NewsList from "../../components/NewsList.astro";
+import PageHero from "../../components/PageHero.astro";
+import Base from "../../layouts/Base.astro";
+import { getNews } from "../../lib/content";
+
+const items = await getNews();
+---
+
+<Base title="お知らせ" description="ヨシミムスビとあっぷるぐみからのお知らせです。">
+  <PageHero eyebrow="News" title="お知らせ" lead="イベント・出演、グッズ、メディア掲載などのお知らせです。">
+    <p class="page-hero__sub"><a class="text-link" href="/news/rss.xml">RSS で受け取る</a></p>
+  </PageHero>
+  <section class="section section--flush">
+    <div class="wrap narrow">
+      <NewsList items={items} headingLevel={2} />
+    </div>
+  </section>
+</Base>

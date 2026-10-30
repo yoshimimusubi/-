@@ -1,0 +1,55 @@
+---
+import { NAV } from "../data/site";
+import Icon from "./Icon.astro";
+import Logo from "./Logo.astro";
+
+const current = Astro.url.pathname;
+const isCurrent = (href: string) => current === href || current.startsWith(href);
+---
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <Logo />
+    <nav class="site-nav" aria-label="メインメニュー">
+      <ul>
+        {
+          NAV.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isCurrent(item.href) ? "page" : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="button button--small" href="/contact/">お問い合わせ</a>
+    </nav>
+    {/* スマホ用メニュー。Popover API なので JavaScript なしで開閉できる */}
+    <button class="menu-button" type="button" popovertarget="mobile-menu" aria-label="メニューを開く">
+      <Icon name="menu" />
+    </button>
+    <div id="mobile-menu" class="mobile-menu" popover>
+      <div class="mobile-menu__head">
+        <span class="mobile-menu__title">メニュー</span>
+        <button class="menu-button" type="button" popovertarget="mobile-menu" popovertargetaction="hide" aria-label="メニューを閉じる">
+          <Icon name="close" />
+        </button>
+      </div>
+      <nav aria-label="メインメニュー（スマートフォン）">
+        <ul>
+          <li><a href="/">トップ</a></li>
+          {
+            NAV.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isCurrent(item.href) ? "page" : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <a class="button" href="/contact/">お問い合わせ</a>
+    </div>
+  </div>
+</header>

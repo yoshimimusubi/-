@@ -1,0 +1,23 @@
+---
+interface Props {
+  title?: string;
+  body?: string;
+}
+const {
+  title = "いっしょに、やさしい発信を。",
+  body = "タイアップ、出演のご依頼、取材など、お気軽にご相談ください。",
+} = Astro.props;
+---
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta">
+      <h2>{title}</h2>
+      <p>{body}</p>
+      <div class="actions">
+        <a class="button" href="/contact/">お問い合わせ</a>
+        <a class="button button--ghost" href="/company/">会社概要</a>
+      </div>
+    </div>
+  </div>
+</section>

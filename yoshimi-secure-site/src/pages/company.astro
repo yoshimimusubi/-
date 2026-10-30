@@ -1,0 +1,64 @@
+---
+import CallToAction from "../components/CallToAction.astro";
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { COMPANY } from "../data/site";
+import Base from "../layouts/Base.astro";
+import { getMembers } from "../lib/content";
+import { splitPlaceholders } from "../lib/format";
+
+const members = await getMembers();
+---
+
+<Base title="会社概要" description="株式会社ヨシミムスビの会社概要です。">
+  <PageHero eyebrow="Company" title="会社概要" lead="キャラクターを通じて、ケアの現場と暮らしをむすぶ会社です。" />
+  <section class="section section--flush">
+    <div class="wrap narrow">
+      <dl class="profile-table">
+        {
+          COMPANY.map((row) => (
+            <div>
+              <dt>{row.label}</dt>
+              <dd>
+                {row.value.split("\n").map((line) => (
+                  <span class="line">
+                    {splitPlaceholders(line).map((part) => (part.todo ? <mark class="todo">{part.text}</mark> : part.text))}
+                  </span>
+                ))}
+              </dd>
+            </div>
+          ))
+        }
+        <div>
+          <dt>お問い合わせ</dt>
+          <dd><a href="/contact/">お問い合わせフォーム</a>から承ります</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="accounts-title">
+    <div class="wrap narrow">
+      <h2 id="accounts-title" class="section-title-sm">公式アカウント</h2>
+      <p class="muted">なりすましにご注意ください。当社とメンバーの公式アカウントは、以下のものだけです。</p>
+      <ul class="account-list">
+        {
+          members.map((m) => (
+            <li data-member={m.id}>
+              <span class="account-list__name">{m.data.name}</span>
+              {m.data.links.x ? (
+                <a href={m.data.links.x} rel="noopener noreferrer">
+                  {m.data.links.x.replace("https://", "")}
+                  <Icon name="external" size={14} />
+                </a>
+              ) : (
+                <span class="muted">準備中</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+  <CallToAction title="ご相談をお待ちしています。" />
+</Base>

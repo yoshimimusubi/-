@@ -1,0 +1,38 @@
+---
+import { NAV, SITE } from "../data/site";
+import Logo from "./Logo.astro";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <div class="site-footer__brand">
+      <Logo />
+      <p>{SITE.tagline}</p>
+    </div>
+    <nav class="site-footer__nav" aria-label="フッターメニュー">
+      <div>
+        <h2>サイト</h2>
+        <ul>
+          <li><a href="/">トップ</a></li>
+          {NAV.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+          <li><a href="/contact/">お問い合わせ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>方針</h2>
+        <ul>
+          <li><a href="/privacy/">プライバシーポリシー</a></li>
+          <li><a href="/security/">セキュリティへの取り組み</a></li>
+          <li><a href="/security/#report">脆弱性の報告</a></li>
+          <li><a href="/news/rss.xml">RSS</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap site-footer__bottom">
+    <p><small>© {year} {SITE.legalName}</small></p>
+    <p><small>このサイトは Cookie・広告トラッカーを使用していません</small></p>
+  </div>
+</footer>

@@ -1,0 +1,33 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { NEWS_CATEGORIES } from "../data/site";
+import { formatDate, isoDate } from "../lib/format";
+
+interface Props {
+  items: CollectionEntry<"news">[];
+  headingLevel?: 2 | 3;
+}
+const { items, headingLevel = 3 } = Astro.props;
+const Heading = `h${headingLevel}` as "h2" | "h3";
+---
+
+{
+  items.length === 0 ? (
+    <p class="empty">お知らせはまだありません。</p>
+  ) : (
+    <ul class="news-list">
+      {items.map((item) => (
+        <li class="news-item">
+          <div class="news-item__meta">
+            <time datetime={isoDate(item.data.date)}>{formatDate(item.data.date)}</time>
+            <span class="chip">{NEWS_CATEGORIES[item.data.category]}</span>
+          </div>
+          <Heading class="news-item__title">
+            <a href={`/news/${item.id}/`}>{item.data.title}</a>
+          </Heading>
+          <p class="news-item__excerpt">{item.data.excerpt}</p>
+        </li>
+      ))}
+    </ul>
+  )
+}

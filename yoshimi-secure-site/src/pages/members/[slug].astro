@@ -1,0 +1,114 @@
+---
+import type { GetStaticPaths } from "astro";
+import { render } from "astro:content";
+import Apple from "../../components/Apple.astro";
+import CallToAction from "../../components/CallToAction.astro";
+import Icon from "../../components/Icon.astro";
+import MemberCard from "../../components/MemberCard.astro";
+import { SITE } from "../../data/site";
+import Base from "../../layouts/Base.astro";
+import { getMembers } from "../../lib/content";
+
+export const getStaticPaths = (async () => {
+  const members = await getMembers();
+  return members.map((member) => ({
+    params: { slug: member.id },
+    props: { member, others: members.filter((m) => m.id !== member.id) },
+  }));
+}) satisfies GetStaticPaths;
+
+const { member, others } = Astro.props;
+const { name, kana, themes, summary, catchphrase, color, links } = member.data;
+const { Content } = await render(member);
+
+const sameAs = [links.x, links.youtube].filter((v): v is string => Boolean(v));
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    mainEntity: {
+      "@type": "Person",
+      name,
+      description: summary,
+      memberOf: { "@type": "Organization", name: SITE.legalName, url: SITE.url },
+      ...(sameAs.length > 0 ? { sameAs } : {}),
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "メンバー", item: `${SITE.url}/members/` },
+      { "@type": "ListItem", position: 2, name, item: `${SITE.url}/members/${member.id}/` },
+    ],
+  },
+];
+---
+
+<Base title={name} description={summary} ogType="profile" structuredData={structuredData}>
+  <article class="profile" data-member={member.id}>
+    <header class="profile__hero">
+      <div class="wrap profile__hero-inner">
+        <nav class="breadcrumb" aria-label="パンくずリスト">
+          <ol>
+            <li><a href="/members/">メンバー</a></li>
+            <li aria-current="page">{name}</li>
+          </ol>
+        </nav>
+        <Apple name={name} color={color} size={168} class="profile__apple" />
+        <div>
+          {kana && kana !== name && <p class="profile__kana">{kana}</p>}
+          <h1 class="profile__name">{name}</h1>
+          {catchphrase && <p class="profile__catch">{catchphrase}</p>}
+          <ul class="tags" aria-label="発信テーマ">
+            {themes.map((t) => <li>{t}</li>)}
+          </ul>
+        </div>
+      </div>
+    </header>
+    <div class="wrap profile__body">
+      <div class="prose">
+        <p class="profile__summary">{summary}</p>
+        <Content />
+      </div>
+      <aside class="profile__links" aria-labelledby="links-title">
+        <h2 id="links-title">公式アカウント</h2>
+        {
+          sameAs.length === 0 ? (
+            <p class="muted">準備中です。</p>
+          ) : (
+            <ul>
+              {links.x && (
+                <li>
+                  <a href={links.x} rel="me noopener noreferrer">
+                    X（旧 Twitter）
+                    <Icon name="external" size={16} />
+                  </a>
+                </li>
+              )}
+              {links.youtube && (
+                <li>
+                  <a href={links.youtube} rel="me noopener noreferrer">
+                    YouTube
+                    <Icon name="external" size={16} />
+                  </a>
+                </li>
+              )}
+            </ul>
+          )
+        }
+        <p class="muted small">ここにないアカウントは公式ではありません。</p>
+      </aside>
+    </div>
+  </article>
+
+  <section class="section" aria-labelledby="others-title">
+    <div class="wrap">
+      <h2 id="others-title" class="section-title-sm">ほかのメンバー</h2>
+      <div class="member-grid member-grid--compact">
+        {others.map((m) => <MemberCard member={m} />)}
+      </div>
+    </div>
+  </section>
+  <CallToAction title={`${name}へのご依頼・ご相談`} body="タイアップや出演のご依頼は、お問い合わせページから承ります。" />
+</Base>

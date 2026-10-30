@@ -1,0 +1,244 @@
+---
+import CallToAction from "../components/CallToAction.astro";
+import Icon, { type IconName } from "../components/Icon.astro";
+import MemberCard from "../components/MemberCard.astro";
+import NewsList from "../components/NewsList.astro";
+import SectionHead from "../components/SectionHead.astro";
+import { COMPANY_ACCOUNTS, SITE } from "../data/site";
+import Base from "../layouts/Base.astro";
+import { getMembers, getNews } from "../lib/content";
+
+const members = await getMembers();
+const news = (await getNews()).slice(0, 3);
+
+// ヒーローのりんごの配置（x, y, 大きさ）。メンバーの表示順に対応
+const cluster = [
+  { x: 40, y: 30, s: 170 },
+  { x: 240, y: 0, s: 140 },
+  { x: 345, y: 130, s: 160 },
+  { x: 190, y: 215, s: 176 },
+  { x: 10, y: 210, s: 150 },
+];
+
+const activities: Array<{ icon: IconName; title: string; body: string }> = [
+  { icon: "chat", title: "SNS・配信での情報発信", body: "X や YouTube で、朝のあいさつから健康にまつわる小さな知識まで、毎日の発信を続けています。" },
+  { icon: "heart", title: "医療・介護の現場へのエール", body: "看護師、介護職、福祉の現場で働く人に向けて、ねぎらいと共感を届けます。" },
+  { icon: "building", title: "企業・団体とのタイアップ", body: "商品やサービス、啓発活動の紹介を、メンバーのテーマと世界観に合わせて企画します。" },
+  { icon: "game", title: "イベント・配信のキャスティング", body: "ゲームイベントや配信企画に合わせて、出演する VTuber の選定から依頼の調整までを行います。" },
+  { icon: "shirt", title: "グッズ・コンテンツ制作", body: "プリントグッズなど、キャラクターを使ったコンテンツを企画・制作します。" },
+  { icon: "sparkle", title: "AI を取り入れた運営", body: "音声合成や AI エージェントを取り入れ、少人数でも発信の質と量を保てる体制をつくっています。" },
+];
+
+const policies = [
+  "診断・治療・効果を言い切らない",
+  "現場で働く人への敬意をいちばんに置く",
+  "宣伝よりも、相手との会話を大切にする",
+  "同じ言葉を使い回さず、一件ずつ考えて返す",
+];
+
+const safety: Array<{ icon: IconName; title: string; body: string }> = [
+  { icon: "lock", title: "すべての通信を暗号化", body: "常に HTTPS で接続し、暗号化されていない通信は受け付けません。" },
+  { icon: "eyeOff", title: "追跡しないサイト", body: "Cookie・広告タグ・外部のアクセス解析を使っていません。" },
+  { icon: "shield", title: "フォームのいたずら対策", body: "ボット判定と送信回数の制限で、なりすましや大量送信を防ぎます。" },
+  { icon: "userCheck", title: "なりすましにご注意を", body: "公式アカウントの一覧を公開しています。DM で金銭を求めることはありません。" },
+];
+
+const faqs = [
+  { q: "お仕事の相談はどこからできますか？", a: ["お問い合わせページのフォームからご連絡ください。内容を確認のうえ、担当よりご返信します。"] },
+  {
+    q: "医療や健康について、個別に相談できますか？",
+    a: ["個別の診断や治療についてのご相談はお受けしていません。", "体調や症状のご心配は、かかりつけの医療機関や専門の相談窓口にご相談ください。"],
+  },
+  { q: "メンバーに応援メッセージを送りたいです。", a: ["各メンバーの X へのリプライや、配信のコメントでお寄せください。ひとつひとつ大切に読んでいます。"] },
+  {
+    q: "メンバーを名乗るアカウントから連絡が来ました。",
+    a: ["公式アカウントは「セキュリティへの取り組み」のページに一覧で載せています。一覧にないアカウントからの連絡には応じないでください。"],
+  },
+];
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE.legalName,
+    alternateName: SITE.name,
+    url: SITE.url,
+    logo: `${SITE.url}/icon.png`,
+    description: SITE.description,
+    ...(COMPANY_ACCOUNTS.length > 0 ? { sameAs: COMPANY_ACCOUNTS.map((a) => a.href) } : {}),
+  },
+  { "@context": "https://schema.org", "@type": "WebSite", name: SITE.name, url: SITE.url, inLanguage: "ja" },
+];
+---
+
+<Base structuredData={structuredData}>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero__inner">
+      <div class="hero__copy">
+        <p class="eyebrow eyebrow--pill">キャラクタープロジェクト「あっぷるぐみ」</p>
+        <h1 id="hero-title" class="hero__title">
+          <span>ケアと暮らしに、</span><span>やさしい声を。</span>
+        </h1>
+        <p class="hero__lead">
+          ヨシミムスビは、看護・介護・健康・美容をテーマに発信するキャラクタープロジェクト「あっぷるぐみ」を運営しています。現場で働く人と、毎日を支える人に向けて、肩の力が抜ける言葉と、確かめながら使える小さな知識を届けます。
+        </p>
+        <div class="actions">
+          <a class="button" href="/members/">メンバーを見る <Icon name="arrow" size={18} /></a>
+          <a class="button button--ghost" href="/contact/">お仕事のご相談</a>
+        </div>
+      </div>
+      <div class="hero__art" aria-hidden="true">
+        <svg viewBox="0 0 520 420" class="cluster" focusable="false">
+          <path
+            class="cluster__thread"
+            d="M20 120C80 30 190 40 160 120S280 40 320 80s120 40 100 140-140 40-150 120S120 400 100 300 0 260 30 200"
+            fill="none"></path>
+          {
+            members.map((m, i) => {
+              const p = cluster[i % cluster.length]!;
+              return (
+                <svg class="cluster__apple" x={p.x} y={p.y} width={p.s} height={p.s} viewBox="0 0 64 64">
+                  <path
+                    d="M32 18c-5-4-14-3.6-18 3.2C9.2 29.2 12 43 19 50c3.4 3.4 7.2 4.2 10.4 2.6 1.6-.8 3.6-.8 5.2 0 3.2 1.6 7 .8 10.4-2.6 7-7 9.8-20.8 5-28.8C46 14.4 37 14 32 18z"
+                    fill={m.data.color}
+                  />
+                  <path class="apple__leaf" d="M33 17c.4-5.6 4-9.2 9.6-9.6-.4 5.6-4 9.2-9.6 9.6z" />
+                  <path class="apple__shine" d="M19.5 26.5c1.4-2.6 3.6-4 6-4.3" fill="none" stroke-linecap="round" />
+                  <text x="32" y="42" text-anchor="middle" class="apple__initial">{[...m.data.name][0]}</text>
+                </svg>
+              );
+            })
+          }
+          <circle class="cluster__dot" cx="470" cy="60" r="7"></circle>
+          <circle class="cluster__dot cluster__dot--leaf" cx="490" cy="370" r="10"></circle>
+          <circle class="cluster__dot" cx="24" cy="388" r="5"></circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="members-title">
+    <div class="wrap">
+      <div class="section-row">
+        <SectionHead
+          id="members-title"
+          eyebrow="あっぷるぐみ"
+          title="5 人のメンバー"
+          lead="それぞれの得意分野から、毎日の発信を続けています。"
+        />
+        <a class="text-link" href="/members/">メンバー一覧へ <Icon name="arrow" size={16} /></a>
+      </div>
+      <div class="member-grid">
+        {members.map((member) => <MemberCard member={member} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tinted" aria-labelledby="activities-title">
+    <div class="wrap">
+      <SectionHead
+        id="activities-title"
+        eyebrow="活動"
+        title="キャラクターだから、届く言葉がある。"
+        lead="ヨシミムスビの主な活動です。"
+        align="center"
+      />
+      <ul class="feature-grid">
+        {
+          activities.map((a) => (
+            <li class="feature">
+              <span class="feature__icon">
+                <Icon name={a.icon} />
+              </span>
+              <h3>{a.title}</h3>
+              <p>{a.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="policy-title">
+    <div class="wrap split">
+      <div>
+        <SectionHead id="policy-title" eyebrow="発信で大切にしていること" title="寄り添うけれど、言い切らない。" />
+        <div class="prose">
+          <p>
+            医療や健康の話題は、ひとりひとり事情が違います。だからわたしたちは、相手の言葉をよく読んでから返し、診断や効果を断定しないことを決めています。
+          </p>
+          <p>キャラクターの明るさと、情報への慎重さ。その両方を大事にしています。</p>
+        </div>
+      </div>
+      <ul class="checklist">
+        {
+          policies.map((p) => (
+            <li>
+              <Icon name="check" />
+              <span>{p}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--tinted" aria-labelledby="safety-title">
+    <div class="wrap">
+      <div class="section-row">
+        <SectionHead
+          id="safety-title"
+          eyebrow="安心して見ていただくために"
+          title="追跡しない、なりすまさせない。"
+          lead="サイトの仕組みから見直し、訪れる人の情報を守るつくりにしています。"
+        />
+        <a class="text-link" href="/security/">セキュリティへの取り組み <Icon name="arrow" size={16} /></a>
+      </div>
+      <ul class="safety-grid">
+        {
+          safety.map((s) => (
+            <li class="safety">
+              <Icon name={s.icon} />
+              <div>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="news-title">
+    <div class="wrap narrow">
+      <div class="section-row">
+        <SectionHead id="news-title" eyebrow="お知らせ" title="最新のお知らせ" />
+        <a class="text-link" href="/news/">お知らせ一覧へ <Icon name="arrow" size={16} /></a>
+      </div>
+      <NewsList items={news} />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="wrap narrow">
+      <SectionHead id="faq-title" eyebrow="FAQ" title="よくあるご質問" />
+      <div class="faq">
+        {
+          faqs.map((f) => (
+            <details name="faq">
+              <summary>{f.q}</summary>
+              <div class="faq__answer">
+                {f.a.map((line) => (
+                  <p>{line}</p>
+                ))}
+              </div>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <CallToAction />
+</Base>

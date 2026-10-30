@@ -1,0 +1,4 @@
+# ローカル確認用。`.dev.vars` にコピーして使う（.dev.vars は commit しない）
+# TURNSTILE_SECRET_KEY は Cloudflare が公開しているテスト用の値で、本番の URL では Worker が拒否する
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+SITE_ORIGIN=http://localhost:8787

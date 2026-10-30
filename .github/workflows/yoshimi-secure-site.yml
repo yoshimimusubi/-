@@ -1,0 +1,57 @@
+# ヨシミムスビ公式サイト（yoshimi-secure-site/）の点検。
+# 変更のたびに「型チェック・テスト・ビルド＋公開前チェック・依存パッケージの脆弱性と署名の点検」を行う。
+# アクションは公開から時間がたった版を Dependabot で更新する。より厳しくするなら commit SHA で固定する（docs/SECURITY_DESIGN.md）
+name: yoshimi-secure-site
+
+on:
+  pull_request:
+    paths: ["yoshimi-secure-site/**", ".github/workflows/yoshimi-secure-site.yml"]
+  push:
+    branches: [main]
+    paths: ["yoshimi-secure-site/**", ".github/workflows/yoshimi-secure-site.yml"]
+  schedule:
+    # 毎週月曜 9:17（日本時間）に、新しく見つかった脆弱性がないかを点検する
+    - cron: "17 0 * * 1"
+  workflow_dispatch:
+
+# 既定ではリポジトリを読むことしかできないようにする
+permissions:
+  contents: read
+
+concurrency:
+  group: yoshimi-secure-site-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: yoshimi-secure-site
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: yoshimi-secure-site/.nvmrc
+          cache: npm
+          cache-dependency-path: yoshimi-secure-site/package-lock.json
+
+      # .npmrc の ignore-scripts=true により、インストール時のスクリプトは実行されない
+      - run: npm ci
+
+      - name: 依存パッケージの脆弱性と、配布元の署名を点検
+        run: npm run audit
+
+      - name: 型チェック
+        run: npm run check
+
+      - name: テスト（お問い合わせ受付の Worker）
+        run: npm test
+
+      - name: ビルドと公開前チェック（CSP を破る書き方・SEO の抜け・security.txt の期限）
+        run: npm run build

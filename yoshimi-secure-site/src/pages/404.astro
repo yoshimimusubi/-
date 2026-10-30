@@ -1,0 +1,13 @@
+---
+import PageHero from "../components/PageHero.astro";
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="ページが見つかりません" description="お探しのページは見つかりませんでした。" noindex>
+  <PageHero eyebrow="404" title="ページが見つかりません" lead="お探しのページは、移動または削除された可能性があります。">
+    <div class="actions">
+      <a class="button" href="/">トップページへ</a>
+      <a class="button button--ghost" href="/members/">メンバーを見る</a>
+    </div>
+  </PageHero>
+</Base>

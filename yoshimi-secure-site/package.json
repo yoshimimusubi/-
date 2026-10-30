@@ -1,0 +1,29 @@
+{
+  "name": "yoshimi-secure-site",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/verify-dist.mjs",
+    "preview": "npm run build && wrangler dev",
+    "check": "wrangler types worker/worker-configuration.d.ts && astro check && tsc -p worker --noEmit",
+    "test": "vitest run",
+    "types": "wrangler types worker/worker-configuration.d.ts",
+    "audit": "npm audit --audit-level=high && npm audit signatures",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@fontsource/zen-maru-gothic": "5.3.1",
+    "astro": "7.4.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5",
+    "wrangler": "4.156.0"
+  }
+}

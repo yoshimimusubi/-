@@ -1,0 +1,13 @@
+---
+import PageHero from "../../components/PageHero.astro";
+import Base from "../../layouts/Base.astro";
+---
+
+<Base title="送信しました" description="お問い合わせを受け付けました。" noindex>
+  <PageHero eyebrow="Contact" title="送信しました" lead="お問い合わせありがとうございます。内容を確認のうえ、担当よりメールでご連絡します。">
+    <p class="page-hero__sub">
+      数日たっても返信がない場合は、迷惑メールのフォルダもご確認ください。
+    </p>
+    <div class="actions"><a class="button button--ghost" href="/">トップページへ</a></div>
+  </PageHero>
+</Base>

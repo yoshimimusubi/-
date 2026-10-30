@@ -1,0 +1,7 @@
+# 株式会社ヨシミムスビ セキュリティ連絡先（RFC 9116）
+# 期限（Expires）が切れる前に更新すること。npm run build で残り日数を点検している
+Contact: https://yoshimimusubi.com/contact/
+Expires: 2027-10-31T00:00:00.000Z
+Preferred-Languages: ja, en
+Canonical: https://yoshimimusubi.com/.well-known/security.txt
+Policy: https://yoshimimusubi.com/security/#report

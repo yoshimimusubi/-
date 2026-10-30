@@ -1,0 +1,39 @@
+---
+import type { GetStaticPaths } from "astro";
+import PageHero from "../../../components/PageHero.astro";
+import Base from "../../../layouts/Base.astro";
+
+export const getStaticPaths = (() => {
+  // getStaticPaths はページ本体と別に実行されるので、文言はこの中で定義して props で渡す
+  const messages = {
+    invalid: {
+      title: "入力内容を確認してください",
+      lead: "入力内容に誤りがあったため、送信できませんでした。メールアドレスの形式や、必須の項目をご確認ください。",
+    },
+    verify: {
+      title: "確認が完了しませんでした",
+      lead: "ボット判定の確認が完了しなかったため、送信できませんでした。ページを開き直して、もう一度お試しください。",
+    },
+    limit: {
+      title: "しばらくしてからお試しください",
+      lead: "短い時間に何度も送信されたため、受付を一時的に止めています。1 分ほど待ってから、もう一度お試しください。",
+    },
+    server: {
+      title: "送信できませんでした",
+      lead: "システムの都合で送信できませんでした。お手数ですが、時間をおいてもう一度お試しください。",
+    },
+  };
+  return Object.entries(messages).map(([reason, message]) => ({ params: { reason }, props: { message } }));
+}) satisfies GetStaticPaths;
+
+const { message } = Astro.props;
+---
+
+<Base title={message.title} description={message.lead} noindex>
+  <PageHero eyebrow="Contact" title={message.title} lead={message.lead}>
+    <p class="page-hero__sub">
+      入力していただいた内容は、安全のためこの画面には表示していません。お手数ですが、もう一度ご入力ください。
+    </p>
+    <div class="actions"><a class="button" href="/contact/">お問い合わせフォームへ戻る</a></div>
+  </PageHero>
+</Base>

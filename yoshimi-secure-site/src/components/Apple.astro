@@ -1,0 +1,20 @@
+---
+// メンバーの「りんご」アイコン。立ち絵が用意できるまでの代わりで、色はメンバーのイメージカラー
+interface Props {
+  name: string;
+  color: string;
+  size?: number;
+  class?: string;
+}
+const { name, color, size = 64, class: className } = Astro.props;
+const initial = [...name][0] ?? "";
+---
+
+<svg class:list={["apple", className]} viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" focusable="false">
+  <path
+    d="M32 18c-5-4-14-3.6-18 3.2C9.2 29.2 12 43 19 50c3.4 3.4 7.2 4.2 10.4 2.6 1.6-.8 3.6-.8 5.2 0 3.2 1.6 7 .8 10.4-2.6 7-7 9.8-20.8 5-28.8C46 14.4 37 14 32 18z"
+    fill={color}></path>
+  <path class="apple__leaf" d="M33 17c.4-5.6 4-9.2 9.6-9.6-.4 5.6-4 9.2-9.6 9.6z"></path>
+  <path class="apple__shine" d="M19.5 26.5c1.4-2.6 3.6-4 6-4.3" fill="none" stroke-linecap="round"></path>
+  <text x="32" y="42" text-anchor="middle" class="apple__initial">{initial}</text>
+</svg>

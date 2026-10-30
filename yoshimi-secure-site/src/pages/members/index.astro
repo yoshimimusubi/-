@@ -1,0 +1,21 @@
+---
+import CallToAction from "../../components/CallToAction.astro";
+import MemberCard from "../../components/MemberCard.astro";
+import PageHero from "../../components/PageHero.astro";
+import Base from "../../layouts/Base.astro";
+import { getMembers } from "../../lib/content";
+
+const members = await getMembers();
+---
+
+<Base title="メンバー" description="あっぷるぐみのメンバー紹介。看護・介護・健康・美容をテーマに発信する 5 人です。">
+  <PageHero eyebrow="あっぷるぐみ" title="メンバー" lead="看護・介護・健康・美容。それぞれの得意分野から発信する 5 人です。" />
+  <section class="section section--flush">
+    <div class="wrap">
+      <div class="member-grid">
+        {members.map((member) => <MemberCard member={member} headingLevel={2} />)}
+      </div>
+    </div>
+  </section>
+  <CallToAction title="メンバーへのご依頼・ご相談" body="タイアップや出演のご依頼は、お問い合わせページから承ります。" />
+</Base>

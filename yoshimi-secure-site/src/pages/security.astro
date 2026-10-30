@@ -1,0 +1,131 @@
+---
+import Icon, { type IconName } from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { COMPANY_ACCOUNTS } from "../data/site";
+import Base from "../layouts/Base.astro";
+import { getMembers } from "../lib/content";
+
+const members = await getMembers();
+
+const measures: Array<{ icon: IconName; title: string; body: string }> = [
+  {
+    icon: "file",
+    title: "管理画面のないサイト",
+    body: "ページはあらかじめ作った静的なファイルとして配信しています。ログイン画面やデータベースを公開していないため、乗っ取りや改ざんの入口がありません。",
+  },
+  {
+    icon: "lock",
+    title: "常時 HTTPS",
+    body: "すべての通信を暗号化し、ブラウザにも HTTPS 以外で接続しないよう指示しています（HSTS）。",
+  },
+  {
+    icon: "shield",
+    title: "読み込むスクリプトを限定",
+    body: "コンテンツセキュリティポリシー（CSP）で、サイトが読み込めるものを自分のサーバーに限っています。外部のスクリプトは、お問い合わせのボット判定だけです。",
+  },
+  {
+    icon: "eyeOff",
+    title: "追跡しない",
+    body: "Cookie・広告タグ・外部のアクセス解析を使っていません。どのページを見たかが、ほかの会社に渡ることはありません。",
+  },
+  {
+    icon: "mail",
+    title: "フォームの安全対策",
+    body: "ボット判定、送信回数の制限、入力内容の厳しいチェックを行っています。内容はサイトに保存せず、担当者へのメールとしてのみ届きます。",
+  },
+  {
+    icon: "refresh",
+    title: "部品の点検を自動化",
+    body: "サイトを作る部品（ライブラリ）の脆弱性を自動で点検し、更新は公開から一定期間たってから取り込みます。",
+  },
+];
+---
+
+<Base title="セキュリティへの取り組み" description="ヨシミムスビのサイトの安全対策、なりすましへの注意、脆弱性の報告窓口について。">
+  <PageHero
+    eyebrow="Security"
+    title="セキュリティへの取り組み"
+    lead="訪れる人の情報を守り、なりすましや改ざんを防ぐために、サイトの仕組みから見直しています。"
+  />
+
+  <section class="section section--flush" aria-labelledby="measures-title">
+    <div class="wrap">
+      <h2 id="measures-title" class="section-title-sm">このサイトの安全対策</h2>
+      <ul class="feature-grid feature-grid--cards">
+        {
+          measures.map((m) => (
+            <li class="feature">
+              <span class="feature__icon">
+                <Icon name={m.icon} />
+              </span>
+              <h3>{m.title}</h3>
+              <p>{m.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--tinted" aria-labelledby="impersonation-title">
+    <div class="wrap narrow">
+      <h2 id="impersonation-title" class="section-title-sm">なりすましにご注意ください</h2>
+      <div class="prose">
+        <p>
+          当社やメンバーを名乗る偽のアカウントから、DM などで連絡が来ることがあります。当社とメンバーが、DM やメールで次のことをお願いすることはありません。
+        </p>
+        <ul>
+          <li>お金やギフトカード、暗号資産の支払い</li>
+          <li>パスワードや認証コード、クレジットカード番号の入力</li>
+          <li>当社のサイト以外の URL からのファイルのダウンロード</li>
+        </ul>
+        <p>公式アカウントは次のものだけです。ここにないアカウントからの連絡には応じないでください。</p>
+      </div>
+      <ul class="account-list">
+        {
+          COMPANY_ACCOUNTS.map((a) => (
+            <li>
+              <span class="account-list__name">{a.label}</span>
+              <a href={a.href} rel="noopener noreferrer">
+                {a.href.replace("https://", "")}
+                <Icon name="external" size={14} />
+              </a>
+            </li>
+          ))
+        }
+        {
+          members.map((m) => (
+            <li data-member={m.id}>
+              <span class="account-list__name">{m.data.name}</span>
+              {m.data.links.x ? (
+                <a href={m.data.links.x} rel="noopener noreferrer">
+                  {m.data.links.x.replace("https://", "")}
+                  <Icon name="external" size={14} />
+                </a>
+              ) : (
+                <span class="muted">準備中</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="report">
+    <div class="wrap narrow prose">
+      <h2 id="report" class="section-title-sm">脆弱性を見つけた方へ</h2>
+      <p>
+        このサイトにセキュリティ上の問題を見つけた場合は、<a href="/contact/">お問い合わせフォーム</a>で「セキュリティ・脆弱性のご報告」を選んでお知らせください。窓口は
+        <a href="/.well-known/security.txt">security.txt</a>（RFC 9116）にも記載しています。
+      </p>
+      <p>調べていただく際は、次の点をお守りください。</p>
+      <ul>
+        <li>ほかの利用者の情報を見たり、変えたりしないこと</li>
+        <li>サービスを止めるような大量のアクセスをしないこと</li>
+        <li>問題が直るまで、内容を公開しないこと</li>
+      </ul>
+      <p>これらを守って善意でご報告いただいた方に対して、当社が法的な措置をとることはありません。</p>
+    </div>
+  </section>
+</Base>

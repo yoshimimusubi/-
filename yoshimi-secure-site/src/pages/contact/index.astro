@@ -1,0 +1,119 @@
+---
+import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import Icon from "../../components/Icon.astro";
+import PageHero from "../../components/PageHero.astro";
+import Base from "../../layouts/Base.astro";
+import { CATEGORIES, LIMITS } from "../../../worker/validate";
+---
+
+<Base title="お問い合わせ" description="タイアップ・出演のご依頼、取材、そのほかのご相談はこちらから。">
+  <!-- ボット判定（Cloudflare Turnstile）。読み込む外部スクリプトはサイト全体でこれだけ -->
+  <script slot="head" is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <PageHero
+    eyebrow="Contact"
+    title="お問い合わせ"
+    lead="タイアップ・出演のご依頼、取材、そのほかのご相談はこちらから。内容を確認のうえ、担当よりご連絡します。"
+  />
+
+  <section class="section section--flush">
+    <div class="wrap contact">
+      <form class="form" method="post" action="/api/contact">
+        <fieldset class="field">
+          <legend>ご用件 <span class="req">必須</span></legend>
+          <div class="choice-grid">
+            {
+              Object.entries(CATEGORIES).map(([value, label], i) => (
+                <label class="choice">
+                  <input type="radio" name="category" value={value} required checked={i === 0} />
+                  <span>{label}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="name">お名前 <span class="req">必須</span></label>
+          <input id="name" name="name" type="text" required maxlength={LIMITS.name} autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="organization">会社・団体名</label>
+          <input id="organization" name="organization" type="text" maxlength={LIMITS.organization} autocomplete="organization" />
+        </div>
+
+        <div class="field">
+          <label for="email">メールアドレス <span class="req">必須</span></label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            maxlength={LIMITS.email}
+            autocomplete="email"
+            inputmode="email"
+            spellcheck="false"
+            aria-describedby="email-help"
+          />
+          <p id="email-help" class="help">ご返信先です。半角英数字で入力してください。</p>
+        </div>
+
+        <div class="field">
+          <label for="message">お問い合わせ内容 <span class="req">必須</span></label>
+          <textarea
+            id="message"
+            name="message"
+            rows="8"
+            required
+            minlength={LIMITS.messageMin}
+            maxlength={LIMITS.messageMax}
+            aria-describedby="message-help"></textarea>
+          <p id="message-help" class="help">
+            {LIMITS.messageMin}〜{LIMITS.messageMax.toLocaleString()} 文字。パスワードや、健康状態などの機微な情報は書かないでください。
+          </p>
+        </div>
+
+        {/* 人には見えない項目。ここに入力があればボットとして扱う */}
+        <div class="hp" aria-hidden="true">
+          <label for="website">この欄は空のままにしてください</label>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="field field--consent">
+          <label class="check">
+            <input type="checkbox" name="consent" value="yes" required />
+            <span><a href="/privacy/">プライバシーポリシー</a>に同意します <span class="req">必須</span></span>
+          </label>
+        </div>
+
+        <div class="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITE_KEY} data-action="contact" data-language="ja"></div>
+        <noscript>
+          <p class="notice">
+            ボット判定のため、送信には JavaScript が必要です。お使いの環境で難しい場合は、<mark class="todo">【JavaScript なしで使える代わりの連絡方法】</mark>からご連絡ください。
+          </p>
+        </noscript>
+
+        <button class="button button--wide" type="submit">送信する <Icon name="arrow" size={18} /></button>
+      </form>
+
+      <aside class="contact__aside">
+        <div class="note-card">
+          <h2><Icon name="mail" /> ご返信について</h2>
+          <p>内容を確認のうえ、担当よりメールでご返信します。返信までの目安は<mark class="todo">【○営業日以内】</mark>です。</p>
+        </div>
+        <div class="note-card">
+          <h2><Icon name="heart" /> 医療・健康のご相談</h2>
+          <p>個別の診断や治療についてのご相談はお受けしていません。かかりつけの医療機関や専門の窓口にご相談ください。</p>
+        </div>
+        <div class="note-card">
+          <h2><Icon name="lock" /> 送信内容の取り扱い</h2>
+          <p>
+            内容は暗号化して送られ、担当者へのメールとしてのみ届きます。サイト側のデータベースには保存しません。
+            <a href="/privacy/">プライバシーポリシー</a>
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
