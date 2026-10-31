@@ -12,6 +12,6 @@ PC・スマホ・クラウドの Claude Code セッションで共有するタ�
 | ID | タイトル | 状態 | 実行場所 | 最終更新 | 次の一手 |
 |---|---|---|---|---|---|
 | T-20260927-01 | PC⇔スマホ タスク相互管理のセットアップ | waiting | Cloud | 2026-09-27 15:40 | PC で `docs/task-sync/PC_SETUP_PROMPT.md` のプロンプトを実行（本人） |
-| T-20261031-01 | ヨシミムスビ公式サイトをセキュリティ重視で作り直し（静的サイト版） | waiting | Cloud | 2026-10-31 02:16 | 参考画像をトップに反映済み。Gemini の意見本文は未取得（環境で share.gemini.google を許可するか本文を貼る）。方向性（EmDash 版とどちらか）と【】の仮情報の記入（本人） |
+| T-20261031-01 | ヨシミムスビ公式サイトをセキュリティ重視で作り直し（静的サイト版） | waiting | Cloud | 2026-10-31 09:08 | PC の Antigravity でテスト環境を起動して確認（`yoshimi-secure-site/docs/ANTIGRAVITY_TEST.md` の手順とプロンプト）。結果を Claude に共有（本人） |
 
 ## Archive
