@@ -87,8 +87,11 @@ npm run dev                 # 見た目の確認だけなら http://localhost:43
 npm run preview             # 本番と同じ Workers の環境で確認（http://localhost:8787/、ヘッダーとフォームも動く）
 ```
 
+Antigravity などの AI エディタでテスト環境を動かして確認する手順は [docs/ANTIGRAVITY_TEST.md](docs/ANTIGRAVITY_TEST.md) にあります。
+
 | コマンド | 内容 |
 |---|---|
+| `npm run smoke` | `npm run preview` で動いているテスト環境に対し、全ページ・セキュリティヘッダー・フォームの受付を自動で確認（42 件） |
 | `npm test` | お問い合わせ受付の Worker のテスト（38 件） |
 | `npm run check` | 型チェック（Astro・Worker） |
 | `npm run build` | ビルド＋公開前チェック（インラインのスクリプトや style 属性、`http://` のリンク、`<h1>` の数、security.txt の期限など） |

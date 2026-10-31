@@ -1,8 +1,11 @@
 // ビルド結果（dist/）を公開前に点検する。CSP を破る書き方や、SEO・アクセシビリティの抜けがあれば失敗させる
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DIST = new URL("../dist/", import.meta.url).pathname;
+// Windows でも動くよう、URL からパスへの変換は fileURLToPath を使い、相対パスの区切りは / にそろえる
+const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
+const relPath = (file) => relative(DIST, file).split(sep).join("/");
 const ALLOWED_EXTERNAL_SCRIPTS = { "contact/index.html": ["https://challenges.cloudflare.com/turnstile/v0/api.js"] };
 const problems = [];
 const warn = [];
@@ -20,7 +23,7 @@ for await (const file of walk(DIST)) if (file.endsWith(".html")) htmlFiles.push(
 if (htmlFiles.length === 0) problems.push("dist に HTML がありません");
 
 for (const file of htmlFiles) {
-  const rel = relative(DIST, file);
+  const rel = relPath(file);
   const html = await readFile(file, "utf8");
   const fail = (msg) => problems.push(`${rel}: ${msg}`);
 
@@ -57,7 +60,7 @@ for (const file of htmlFiles) {
 for await (const file of walk(DIST)) {
   if (!file.endsWith(".css")) continue;
   const css = await readFile(file, "utf8");
-  const rel = relative(DIST, file);
+  const rel = relPath(file);
   if (/url\(\s*["']?data:font/.test(css)) problems.push(`${rel}: data: のフォントが埋め込まれている`);
   for (const [, url] of css.matchAll(/url\(\s*["']?(https?:\/\/[^"')]+)/g)) problems.push(`${rel}: 外部 URL を読み込んでいる: ${url}`);
 }

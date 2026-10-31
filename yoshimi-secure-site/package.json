@@ -10,6 +10,7 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/verify-dist.mjs",
     "preview": "npm run build && wrangler dev",
+    "smoke": "node scripts/smoke.mjs",
     "check": "wrangler types worker/worker-configuration.d.ts && astro check && tsc -p worker --noEmit",
     "test": "vitest run",
     "types": "wrangler types worker/worker-configuration.d.ts",
