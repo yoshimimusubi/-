@@ -12,6 +12,6 @@ PC・スマホ・クラウドの Claude Code セッションで共有するタ�
 | ID | タイトル | 状態 | 実行場所 | 最終更新 | 次の一手 |
 |---|---|---|---|---|---|
 | T-20260927-01 | PC⇔スマホ タスク相互管理のセットアップ | waiting | Cloud | 2026-09-27 15:40 | PC で `docs/task-sync/PC_SETUP_PROMPT.md` のプロンプトを実行（本人） |
-| T-20261119-01 | 公式サイト未掲載の実績リサーチ（ココナラ・ランサーズ等） | waiting | Cloud | 2026-11-19 18:54 | 調査結果 `docs/achievements-research/UNLISTED_ACHIEVEMENTS.md` を見て、実績ページに追加する案件を選ぶ。ランサーズはログインして直接確認（本人） |
+| T-20261119-01 | 公式サイト未掲載の実績リサーチと掲載（ココナラ・ランサーズ等） | waiting | Cloud | 2026-11-20 10:46 | `docs/achievements-research/CODEX_PROMPT.md` の指示文を Codex に渡して下書き作成 → 下書きを確認して公開（本人） |
 
 ## Archive
